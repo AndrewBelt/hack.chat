@@ -71,7 +71,13 @@ var COMMANDS = {
 				nicks.push(client.nick)
 			}
 		}
-		var welcome = "Welcome! Users online: " + nicks.join(', ')
+		var welcome = "Welcome!"
+		if (nicks.length > 0) {
+			welcome += " Users online: " + nicks.join(', ')
+		}
+		else {
+			welcome += " No users online"
+		}
 		send(this, {nick: '*', text: welcome})
 
 		// Announce the new user
