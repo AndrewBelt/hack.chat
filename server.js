@@ -25,6 +25,7 @@ server.on('connection', function(socket) {
 })
 
 function send(client, data) {
+	// Add timestamp to command
 	data.time = Date.now()
 	client.send(JSON.stringify(data))
 }
@@ -64,14 +65,14 @@ var COMMANDS = {
 		}
 
 		// Welcome the new user
-		var users = server.clients.filter(function(client) {
-			return client.channel === channel
-		}).map(function(client) {
-			return client.nick
-		})
-		var motd = "Welcome! Users online: " + users.join(', ')
-		send(this, {nick: '*', text: motd})
-
+		var nicks = []
+		for (var client of server.clients) {
+			if (client.channel === channel) {
+				nicks.push(client.nick)
+			}
+		}
+		var welcome = "Welcome! Users online: " + nicks.join(', ')
+		send(this, {nick: '*', text: welcome})
 
 		// Announce the new user
 		broadcast(channel, {nick: '*', text: nick + " joined"})
@@ -82,7 +83,9 @@ var COMMANDS = {
 	chat: function(text) {
 		if (this.channel === undefined) return
 		text += ''
+		// strip newlines from beginning and end
 		text = text.replace(/^\s*\n|^\s+$|\n\s*$/g, '')
+		// replace 3+ newlines with just 2 newlines
 		text = text.replace(/\n{3,}/g, "\n\n")
 		if (text == '') return
 

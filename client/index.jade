@@ -3,21 +3,19 @@ html(lang="en")
 	head
 		meta(charset="utf-8")
 		title hack.chat
-		link(rel="stylesheet", href="katex/katex.min.css")
 		link(rel="stylesheet", href="style.css")
-		link#scheme-link(rel="stylesheet", href="schemes/atelier-dune.css")
+		link(rel="stylesheet", href="katex/katex.min.css")
+		link#scheme-link(rel="stylesheet", href="schemes/atelier-forest.css")
 		script(src="katex/katex.min.js")
-		script(src="katex/contrib/auto-render.min.js")
 		script(src="urlize.js")
+		script(src="chat.js")
 	body
 		.container
 			#messages.messages
 		
-		footer
+		footer.hidden
 			.container
 				form#chatform.messages
 					.message
 						.text
 							textarea#chattext(type='text', autocomplete='off')
-		
-		script(src="chat.js")
