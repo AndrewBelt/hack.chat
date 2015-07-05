@@ -1,0 +1,41 @@
+
+// Declared by the makefile
+// @name: '';
+
+@import "base16/@{name}.less";
+
+body {
+  background: @base00;
+  color: @base05;
+
+  input, textarea {
+    color: @base05;
+  }
+
+  a {
+    color: @base0D;
+  }
+
+  code {
+    background: @base01;
+  }
+
+  .messages {
+    border-left-color: @base03;
+  }
+
+  .nick {
+    color: @base0B;
+    &.me {
+      color: @base0C;
+    }
+  }
+
+  footer {
+    background: @base00;
+  }
+
+  #chatform {
+    border-top-color: @base03;
+  }
+}
