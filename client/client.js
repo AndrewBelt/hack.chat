@@ -49,7 +49,8 @@ window.onload = function() {
 
 
 function join(channel, nick) {
-	var ws = new WebSocket('ws://' + document.domain + ':6060')
+	var ws = new WebSocket('ws://' + document.domain + '/chat-ws')
+	// var ws = new WebSocket('ws://' + document.domain + ':6060')
 
 	ws.onopen = function() {
 		ws.send(JSON.stringify(['join', channel, nick]))
@@ -81,7 +82,6 @@ function join(channel, nick) {
 	}
 	$('#chatinput').focus()
 	$('#chatinput').addEventListener('input', function() {
-		console.log('wut')
 		updateInputSize()
 	})
 	updateInputSize()
@@ -89,7 +89,7 @@ function join(channel, nick) {
 
 
 function updateInputSize() {
-	var atBottom = ((window.innerHeight + window.scrollY) >= document.body.scrollHeight)
+	var atBottom = isAtBottom()
 
 	var input = $('#chatinput')
 	input.style.height = 0
@@ -129,17 +129,14 @@ function pushMessage(data) {
 	textEl.innerHTML = textEl.innerHTML.replace(/\$(\S.*?\S|\S)\$/g, parseMath)
 	message.appendChild(textEl)
 
-	var atBottom = ((window.innerHeight + window.scrollY) >= document.body.scrollHeight)
+	var atBottom = isAtBottom()
 	$('#messages').appendChild(message)
 	if (atBottom) {
 		window.scrollTo(0, document.body.scrollHeight)
 	}
 
-	// Change title if inactive
-	if (!windowActive) {
-		unread += 1
-		updateTitle()
-	}
+	unread += 1
+	updateTitle()
 }
 
 
@@ -163,7 +160,6 @@ var unread = 0
 
 window.onfocus = function() {
 	windowActive = true
-	unread = 0
 	updateTitle()
 }
 
@@ -171,7 +167,21 @@ window.onblur = function() {
 	windowActive = false
 }
 
+window.onscroll = function() {
+	if (isAtBottom()) {
+		updateTitle()
+	}
+}
+
+function isAtBottom() {
+	return (window.innerHeight + window.scrollY) >= document.body.scrollHeight
+}
+
 function updateTitle() {
+	if (windowActive && isAtBottom()) {
+		unread = 0
+	}
+
 	var title = ''
 	if (unread > 0) {
 		title += '(' + unread + ') '
