@@ -115,7 +115,7 @@ var COMMANDS = {
 		if (text == '') return
 
 		if (POLICE.frisk(getAddress(this), 1 + text.length / 300)) {
-			send(this, {nick: '*', text: "You are sending too much text. Wait a moment and try again. Here was your message:\n\n" + text})
+			send(this, {nick: '*', text: "Your IP is sending too much text. Wait a moment and try again. Here was your message:\n\n" + text})
 			return
 		}
 

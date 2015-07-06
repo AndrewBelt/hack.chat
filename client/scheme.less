@@ -7,35 +7,44 @@
 body {
   background: @base00;
   color: @base05;
+}
 
-  input, textarea {
-    color: @base05;
-  }
+input, textarea {
+  color: @base05;
+}
 
-  a {
-    color: @base0D;
-  }
+a {
+  color: @base0D;
+}
 
-  code {
-    background: @base01;
-  }
+code {
+  background: @base01;
+}
 
-  .messages {
-    border-left-color: @base03;
-  }
+.messages {
+  border-left-color: @base03;
+}
 
+.nick {
+  color: @base0D;
+}
+
+.me {
   .nick {
     color: @base0B;
-    &.me {
-      color: @base0C;
-    }
   }
+}
 
-  footer {
-    background: @base00;
+.server {
+  .nick, .text {
+    color: @base0A;
   }
+}
 
-  #chatform {
-    border-top-color: @base03;
-  }
+footer {
+  background: @base00;
+}
+
+#chatform {
+  border-top-color: @base03;
 }

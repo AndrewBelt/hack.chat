@@ -51,8 +51,8 @@ window.onload = function() {
 
 
 function join(channel, nick) {
-	var ws = new WebSocket('wss://' + document.domain + '/chat-ws')
-	// var ws = new WebSocket('ws://' + document.domain + ':6060')
+	// var ws = new WebSocket('wss://' + document.domain + '/chat-ws')
+	var ws = new WebSocket('ws://' + document.domain + ':6060')
 
 	ws.onopen = function() {
 		ws.send(JSON.stringify(['join', channel, nick]))
@@ -107,12 +107,15 @@ function updateInputSize() {
 function pushMessage(data) {
 	var message = document.createElement('div')
 	message.classList.add('message')
+	if (data.nick == myNick) {
+		message.classList.add('me')
+	}
+	if (data.nick == '*') {
+		message.classList.add('server')
+	}
 
 	var nick = document.createElement('span')
 	nick.classList.add('nick')
-	if (data.nick == myNick) {
-		nick.classList.add('me')
-	}
 	nick.textContent = data.nick || ''
 	if (data.time) {
 		var time = new Date(data.time)
