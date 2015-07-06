@@ -5,7 +5,7 @@ html(lang="en")
 		title hack.chat
 		link(rel="stylesheet", href="style.css")
 		link(rel="stylesheet", href="katex/katex.min.css")
-		link#scheme-link(rel="stylesheet", href="schemes/atelier-forest.css")
+		link#scheme-link(rel="stylesheet", href="schemes/atelier-dune.css")
 		script(src="katex/katex.min.js")
 		script(src="urlize.js")
 		script(src="client.js")
@@ -16,6 +16,4 @@ html(lang="en")
 		footer.hidden
 			.container
 				form#chatform.messages
-					.message
-						.text
-							textarea#chattext(type='text', autocomplete='off')
+					textarea#chatinput(type='text', autocomplete='off')

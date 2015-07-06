@@ -9,9 +9,9 @@ var motd = [
 	"",
 	"",
 	"Welcome to hack.chat, a minimal chat service for verbatim discussions!",
-	"Channels can be created and joined by going to hack.chat/?your-channel. There are no channel lists, so a secret name can be used for private discussions.",
+	"Channels are created and joined by going to hack.chat/?your-channel. There are no channel lists, so a secret channel name can be used for private discussions.",
 	"",
-	"Here are a few pre-made channels you can join:",
+	"Here are some pre-made channels you can join:",
 	"http://hack.chat/?lobby",
 	"http://hack.chat/?meta",
 	"http://hack.chat/?asciiart",
@@ -49,7 +49,7 @@ window.onload = function() {
 
 
 function join(channel, nick) {
-	var ws = new WebSocket('ws://' + document.domain + '/chat-ws')
+	var ws = new WebSocket('ws://' + document.domain + ':6060')
 
 	ws.onopen = function() {
 		ws.send(JSON.stringify(['join', channel, nick]))
@@ -66,20 +66,39 @@ function join(channel, nick) {
 
 	$('footer').classList.remove('hidden')
 	$('footer').onclick = function() {
-		$('#chattext').focus()
+		$('#chatinput').focus()
 	}
 
-	$('#chattext').onkeydown = function(e) {
+	$('#chatinput').onkeydown = function(e) {
 		if (e.keyCode == 13 && !e.shiftKey) {
-			if ($('#chattext').value != '') {
-				ws.send(JSON.stringify(['chat', $('#chattext').value]))
-				$('#chattext').value = ''
+			if ($('#chatinput').value != '') {
+				ws.send(JSON.stringify(['chat', $('#chatinput').value]))
+				$('#chatinput').value = ''
+				updateInputSize()
 			}
 			e.preventDefault()
 		}
 	}
-	$('#chattext').focus()
+	$('#chatinput').focus()
+	$('#chatinput').addEventListener('input', function() {
+		console.log('wut')
+		updateInputSize()
+	})
+	updateInputSize()
+}
 
+
+function updateInputSize() {
+	var atBottom = ((window.innerHeight + window.scrollY) >= document.body.scrollHeight)
+
+	var input = $('#chatinput')
+	input.style.height = 0
+	input.style.height = input.scrollHeight + 'px'
+	document.body.style.marginBottom = $('footer').offsetHeight + 'px'
+
+	if (atBottom) {
+		window.scrollTo(0, document.body.scrollHeight)
+	}
 }
 
 
