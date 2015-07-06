@@ -1,6 +1,7 @@
 var ws = require('ws')
 
-var server = new ws.Server({port: 6060})
+
+var server = new ws.Server({host: '127.0.0.1', port: 6060})
 
 server.on('connection', function(socket) {
 	socket.on('message', function(data) {
@@ -13,7 +14,7 @@ server.on('connection', function(socket) {
 			}
 		}
 		catch (e) {
-			console.warn(e)
+			console.warn(e.stack)
 		}
 	})
 
@@ -27,7 +28,12 @@ server.on('connection', function(socket) {
 function send(client, data) {
 	// Add timestamp to command
 	data.time = Date.now()
-	client.send(JSON.stringify(data))
+	try {
+		client.send(JSON.stringify(data))
+	}
+	catch (e) {
+		console.warn(e.stack)
+	}
 }
 
 function broadcast(channel, data) {
@@ -39,13 +45,21 @@ function broadcast(channel, data) {
 }
 
 function nicknameValid(nick) {
-	return /^[^$*,]+$/.test(nick)
+	return /^[\u0020-\u007e^$*,]{1,32}$/.test(nick)
+}
+
+function getAddress(client) {
+	return client.upgradeReq.headers['x-forwarded-for'] || client.upgradeReq.connection.remoteAddress
 }
 
 
 // `this` bound to client
 var COMMANDS = {
 	join: function(channel, nick) {
+		if (this.nick) {
+			return
+		}
+
 		// Process channel name
 		channel += ''
 		channel = channel.trim()
@@ -62,6 +76,11 @@ var COMMANDS = {
 				send(this, {nick: '*', text: 'Nickname taken'})
 				return
 			}
+		}
+
+		if (POLICE.frisk(getAddress(this), 1)) {
+			send(this, {nick: '*', text: "You cannot join a channel while your IP is being rate-limited. Wait a moment and try again."})
+			return
 		}
 
 		// Welcome the new user
@@ -95,6 +114,34 @@ var COMMANDS = {
 		text = text.replace(/\n{3,}/g, "\n\n")
 		if (text == '') return
 
+		if (POLICE.frisk(getAddress(this), 1 + text.length / 300)) {
+			send(this, {nick: '*', text: "You are sending too much text. Wait a moment and try again. Here was your message:\n\n" + text})
+			return
+		}
+
 		broadcast(this.channel, {nick: this.nick, text: text})
 	},
+}
+
+
+// rate limiter
+var POLICE = {
+	records: {},
+	halflife: 5000, // ms
+	threshold: 10,
+
+	frisk: function(id, deltaScore) {
+		var record = this.records[id]
+		if (!record) {
+			record = this.records[id] = {
+				time: Date.now(),
+				score: 0
+			}
+		}
+
+		record.score *= Math.pow(2, -(Date.now() - record.time)/POLICE.halflife)
+		record.score += deltaScore
+		record.time = Date.now()
+		return record.score >= this.threshold
+	}
 }

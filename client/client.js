@@ -8,7 +8,7 @@ var motd = [
 	"                           |_|_|__/|___|_,_|.|___|_|_|__/|_|  ",
 	"",
 	"",
-	"Welcome to hack.chat, a minimal chat service for verbatim discussions!",
+	"Welcome to hack.chat, a minimal chat service for humans.",
 	"Channels are created and joined by going to hack.chat/?your-channel. There are no channel lists, so a secret channel name can be used for private discussions.",
 	"",
 	"Here are some pre-made channels you can join:",
@@ -40,16 +40,18 @@ window.onload = function() {
 	var channel = window.location.search.replace(/^\?/, '')
 	if (channel != '') {
 		myNick = prompt('Nickname:')
-		join(channel, myNick)
+		if (myNick) {
+			join(channel, myNick)
+			return
+		}
 	}
-	else {
-		pushMessage({text: motd})
-	}
+
+	pushMessage({text: motd})
 }
 
 
 function join(channel, nick) {
-	var ws = new WebSocket('ws://' + document.domain + '/chat-ws')
+	var ws = new WebSocket('wss://' + document.domain + '/chat-ws')
 	// var ws = new WebSocket('ws://' + document.domain + ':6060')
 
 	ws.onopen = function() {
@@ -149,7 +151,7 @@ function parseMath(g0, g1) {
 		return html
 	}
 	catch (e) {
-		console.warn(e.message)
+		console.warn(e)
 		return g0
 	}
 }
