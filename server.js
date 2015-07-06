@@ -45,7 +45,7 @@ function broadcast(channel, data) {
 }
 
 function nicknameValid(nick) {
-	return /^[\u0020-\u007e^$*,]{1,32}$/.test(nick)
+	return /^[_A-Za-z0-9\-`~!@#%^&()]{1,32}$/.test(nick)
 }
 
 function getAddress(client) {
