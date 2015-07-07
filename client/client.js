@@ -8,15 +8,14 @@ var motd = [
 	"                           |_|_|__/|___|_,_|.|___|_|_|__/|_|  ",
 	"",
 	"",
-	"Welcome to hack.chat, a minimal chat service for humans.",
-	"Channels are created and joined by going to hack.chat/?your-channel. There are no channel lists, so a secret channel name can be used for private discussions.",
+	"Welcome to hack.chat, a minimal, distraction-free chat application.",
+	"Channels are created and joined by going to https://hack.chat/?your-channel. There are no channel lists, so a secret channel name can be used for private discussions.",
 	"",
 	"Here are some pre-made channels you can join:",
-	"http://hack.chat/?lobby",
-	"http://hack.chat/?meta",
-	"http://hack.chat/?asciiart",
-	"And here's a random one generated just for you: http://hack.chat/?" + Math.random().toString(36).substr(2, 8),
-	"",
+	"?lobby ?meta ?random",
+	"?technology ?programming",
+	"?math ?physics ?asciiart",
+	"And here's a random one generated just for you: ?" + Math.random().toString(36).substr(2, 8),
 	"",
 	"",
 	"",
@@ -30,7 +29,7 @@ var motd = [
 	"",
 	"GitHub repo: https://github.com/AndrewBelt/hack.chat",
 	"Server and client released under the GNU General Public License.",
-	"No messages are retained on the hack.chat server.",
+	"No message history is retained on the hack.chat server.",
 ].join("\n")
 
 function $(query) {return document.querySelector(query)}
@@ -55,8 +54,8 @@ window.onload = function() {
 var ws
 
 function join(channel, nick) {
-	// ws = new WebSocket('wss://' + document.domain + '/chat-ws')
-	ws = new WebSocket('ws://' + document.domain + ':6060')
+	ws = new WebSocket('wss://' + document.domain + '/chat-ws')
+	// ws = new WebSocket('ws://' + document.domain + ':6060')
 
 	ws.onopen = function() {
 		ws.send(JSON.stringify({cmd: 'join', channel: channel, nick: nick}))
@@ -167,6 +166,9 @@ function pushMessage(nick, text, time, cls) {
 	textEl.classList.add('text')
 
 	textEl.textContent = text || ''
+	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/).*?(?=[,.!?:)]?\s|$)/g, parseLinks)
+	// TODO
+	// This needs to parse in a single regex
 	textEl.innerHTML = textEl.innerHTML.replace(/\$\$(\S.*?\S|\S)\$\$/g, parseMath)
 	textEl.innerHTML = textEl.innerHTML.replace(/\$(\S.*?\S|\S)\$/g, parseMath)
 	messageEl.appendChild(textEl)
@@ -179,6 +181,18 @@ function pushMessage(nick, text, time, cls) {
 
 	unread += 1
 	updateTitle()
+}
+
+
+function parseLinks(g0) {
+	var a = document.createElement('a')
+	a.innerHTML = g0
+	var url = a.textContent
+	if (url[0] == '?') {
+		url = "https://hack.chat/" + url
+	}
+	a.href = url
+	return a.outerHTML
 }
 
 
@@ -231,6 +245,7 @@ function updateTitle() {
 	title += 'hack.chat'
 	document.title = title
 }
+
 
 var users = {}
 
