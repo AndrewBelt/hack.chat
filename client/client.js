@@ -26,6 +26,8 @@ var motd = [
 	"$$\\int_0^1 \\int_0^1 \\frac{1}{1-xy} dx dy = \\frac{\\pi^2}{6}$$",
 	"",
 	"",
+	"Note that only the admin has a glowing nickname. All others claiming to be are impersonators.",
+	"",
 	"GitHub repo: https://github.com/AndrewBelt/hack.chat",
 	"Server and client released under the GNU General Public License.",
 	"No messages are retained on the hack.chat server.",
@@ -42,29 +44,31 @@ window.onload = function() {
 		myNick = prompt('Nickname:')
 		if (myNick) {
 			join(channel, myNick)
-			return
 		}
 	}
-
-	pushMessage({text: motd})
+	else {
+		pushMessage('', motd)
+	}
 }
 
 
 function join(channel, nick) {
-	var ws = new WebSocket('wss://' + document.domain + '/chat-ws')
-	// var ws = new WebSocket('ws://' + document.domain + ':6060')
+	// var ws = new WebSocket('wss://' + document.domain + '/chat-ws')
+	var ws = new WebSocket('ws://' + document.domain + ':6060')
 
 	ws.onopen = function() {
-		ws.send(JSON.stringify(['join', channel, nick]))
+		ws.send(JSON.stringify({cmd: 'join', channel: channel, nick: nick}))
 	}
 
 	ws.onmessage = function(message) {
-		var data = JSON.parse(message.data)
-		pushMessage(data)
+		var args = JSON.parse(message.data)
+		var cmd = args.cmd
+		var command = COMMANDS[cmd]
+		command.call(null, args)
 	}
 
 	ws.onclose = function() {
-		pushMessage({nick: '*', text: "Server disconnected"})
+		pushMessage('!', "Server disconnected", Date.now(), 'warn')
 	}
 
 	$('footer').classList.remove('hidden')
@@ -75,7 +79,7 @@ function join(channel, nick) {
 	$('#chatinput').onkeydown = function(e) {
 		if (e.keyCode == 13 && !e.shiftKey) {
 			if ($('#chatinput').value != '') {
-				ws.send(JSON.stringify(['chat', $('#chatinput').value]))
+				ws.send(JSON.stringify({cmd: 'chat', text: $('#chatinput').value}))
 				$('#chatinput').value = ''
 				updateInputSize()
 			}
@@ -87,6 +91,34 @@ function join(channel, nick) {
 		updateInputSize()
 	})
 	updateInputSize()
+}
+
+
+var COMMANDS = {
+	chat: function(args) {
+		var cls
+		if (args.admin) {
+			cls = 'admin'
+		}
+		else if (myNick == args.nick) {
+			cls = 'me'
+		}
+		pushMessage(args.nick, args.text, args.time, cls)
+	},
+	info: function(args) {
+		pushMessage('*', args.text, args.time, 'info')
+	},
+	warn: function(args) {
+		pushMessage('!', args.text, args.time, 'warn')
+	},
+	joined: function(args) {
+		// TEMP
+		pushMessage('*', args.nick + " joined", args.time, 'info')
+	},
+	left: function(args) {
+		// TEMP
+		pushMessage('*', args.nick + " left", args.time, 'info')
+	},
 }
 
 
@@ -104,38 +136,32 @@ function updateInputSize() {
 }
 
 
-function pushMessage(data) {
-	var message = document.createElement('div')
-	message.classList.add('message')
-	if (data.nick == myNick) {
-		message.classList.add('me')
-	}
-	if (data.nick == '*') {
-		message.classList.add('server')
+function pushMessage(nick, text, time, cls) {
+	var messageEl = document.createElement('div')
+	messageEl.classList.add('message')
+	if (cls) {
+		messageEl.classList.add(cls)
 	}
 
-	var nick = document.createElement('span')
-	nick.classList.add('nick')
-	nick.textContent = data.nick || ''
-	if (data.time) {
-		var time = new Date(data.time)
-		nick.title = time.toLocaleString()
+	var nickEl = document.createElement('span')
+	nickEl.classList.add('nick')
+	nickEl.textContent = nick || ''
+	if (time) {
+		var date = new Date(time)
+		nickEl.title = date.toLocaleString()
 	}
-	message.appendChild(nick)
+	messageEl.appendChild(nickEl)
 
 	var textEl = document.createElement('pre')
 	textEl.classList.add('text')
 
-	var text = data.text || ''
-	textEl.textContent = text
-	// textEl.innerHTML = textEl.innerHTML.replace(/\B`(.*?)`\B/g, '<code>$1</code>')
-	textEl.innerHTML = urlize(textEl.innerHTML, {target: '_blank'})
+	textEl.textContent = text || ''
 	textEl.innerHTML = textEl.innerHTML.replace(/\$\$(\S.*?\S|\S)\$\$/g, parseMath)
 	textEl.innerHTML = textEl.innerHTML.replace(/\$(\S.*?\S|\S)\$/g, parseMath)
-	message.appendChild(textEl)
+	messageEl.appendChild(textEl)
 
 	var atBottom = isAtBottom()
-	$('#messages').appendChild(message)
+	$('#messages').appendChild(messageEl)
 	if (atBottom) {
 		window.scrollTo(0, document.body.scrollHeight)
 	}

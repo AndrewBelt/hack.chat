@@ -14,11 +14,7 @@ input, textarea {
 }
 
 a {
-  color: @base0D;
-}
-
-code {
-  background: @base01;
+  color: @base06;
 }
 
 .messages {
@@ -31,13 +27,26 @@ code {
 
 .me {
   .nick {
+    color: @base0E;
+  }
+}
+
+.info {
+  .nick, .text {
     color: @base0B;
   }
 }
 
-.server {
+.warn {
   .nick, .text {
     color: @base0A;
+  }
+}
+
+.admin {
+  .nick {
+    color: @base08;
+    text-shadow: rgba(255, 255, 255, 0.5) 0 0 3px;
   }
 }
 
