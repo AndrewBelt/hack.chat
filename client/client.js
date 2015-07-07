@@ -26,7 +26,7 @@ var motd = [
 	"$$\\int_0^1 \\int_0^1 \\frac{1}{1-xy} dx dy = \\frac{\\pi^2}{6}$$",
 	"",
 	"",
-	"Note that only the admin has a glowing nickname. All others claiming to be are impersonators.",
+	"Vortico is the one and only admin. All others claiming to be are imposters.",
 	"",
 	"GitHub repo: https://github.com/AndrewBelt/hack.chat",
 	"Server and client released under the GNU General Public License.",
@@ -52,9 +52,11 @@ window.onload = function() {
 }
 
 
+var ws
+
 function join(channel, nick) {
-	// var ws = new WebSocket('wss://' + document.domain + '/chat-ws')
-	var ws = new WebSocket('ws://' + document.domain + ':6060')
+	// ws = new WebSocket('wss://' + document.domain + '/chat-ws')
+	ws = new WebSocket('ws://' + document.domain + ':6060')
 
 	ws.onopen = function() {
 		ws.send(JSON.stringify({cmd: 'join', channel: channel, nick: nick}))

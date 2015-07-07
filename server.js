@@ -80,7 +80,7 @@ var COMMANDS = {
 
 		// Process nickname
 		nick = nick.trim()
-		if (nick == config.admin) {
+		if (nick.toLowerCase() == config.admin.toLowerCase()) {
 			send(this, {cmd: 'warn', text: "Cannot impersonate the admin"})
 			return
 		}
@@ -96,7 +96,7 @@ var COMMANDS = {
 		var address = getAddress(this)
 		for (var client of server.clients) {
 			if (client.channel === channel) {
-				if (client.nick === nick) {
+				if (client.nick.toLowerCase() === nick.toLowerCase()) {
 					send(this, {cmd: 'warn', text: "Nickname taken"})
 					return
 				}
@@ -119,7 +119,7 @@ var COMMANDS = {
 		// Formally join channel
 		this.channel = channel
 		this.nick = nick
-		
+
 		// Announce the new user
 		broadcast(channel, {cmd: 'joined', nick: nick})
 	},
@@ -145,6 +145,27 @@ var COMMANDS = {
 		}
 		broadcast(this.channel, args)
 	},
+
+	ban: function(args) {
+		nick = String(args.nick)
+
+		if (!this.admin) {
+			return
+		}
+
+		var badClient
+		for (var client of server.clients) {
+			if (client.channel == this.channel && client.nick == nick) {
+				badClient = client
+			}
+		}
+
+		if (badClient) {
+			POLICE.arrest(getAddress(badClient))
+			send(badClient, {cmd: 'warn', text: "You have been banned. :("})
+			send(this, {cmd: 'info', text: "Banned " + badClient.nick})
+		}
+	}
 }
 
 
@@ -163,9 +184,20 @@ var POLICE = {
 			}
 		}
 
+		if (record.arrested) {
+			return true
+		}
+
 		record.score *= Math.pow(2, -(Date.now() - record.time)/POLICE.halflife)
 		record.score += deltaScore
 		record.time = Date.now()
 		return record.score >= this.threshold
-	}
+	},
+
+	arrest: function(id) {
+		var record = this.records[id]
+		if (record) {
+			record.arrested = true
+		}
+	},
 }
