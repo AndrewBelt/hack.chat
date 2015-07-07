@@ -9,6 +9,15 @@
 
 ### Client side
 * `cd hack.chat/client`
+* Edit `join` function in `client.js`
+
+```
+...
+function join(channel, nick) {
+  // ws = new WebSocket('wss://' + document.domain + '/chat-ws')
+  ws = new WebSocket('ws:/' + document.domain + ':6060')
+...
+```
 * `make`
 * `npm install -g http-server && http-server`
 
