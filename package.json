@@ -1,0 +1,33 @@
+{
+  "name": "hack.chat",
+  "version": "1.0.0",
+  "description": "The smallest chat",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndrewBelt/hack.chat.git"
+  },
+  "keywords": [
+    "chat"
+  ],
+  "author": {
+    "name": "Andrew Belt",
+    "email": "andrewpbelt@gmail.com",
+    "url": "https://github.com/AndrewBelt"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AndrewBelt/hack.chat/issues"
+  },
+  "homepage": "https://github.com/AndrewBelt/hack.chat",
+  "dependencies": {
+    "ws": "^0.7.2"
+  },
+  "engines": {
+    "node": ">=0.12.0"
+  },
+}
