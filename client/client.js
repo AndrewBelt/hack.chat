@@ -71,8 +71,9 @@ function join(channel, nick) {
 		pushMessage('!', "Server disconnected", Date.now(), 'warn')
 	}
 
-	$('footer').classList.remove('hidden')
-	$('footer').onclick = function() {
+	// prepare footer
+	$('#footer').classList.remove('hidden')
+	$('#footer').onclick = function() {
 		$('#chatinput').focus()
 	}
 
@@ -91,6 +92,14 @@ function join(channel, nick) {
 		updateInputSize()
 	})
 	updateInputSize()
+
+	// prepare sidebar
+	$('#sidebar').onmouseenter = function() {
+		$('#sidebar-content').classList.remove('hidden')
+	}
+	$('#sidebar').onmouseleave = function() {
+		$('#sidebar-content').classList.add('hidden')
+	}
 }
 
 
@@ -112,12 +121,12 @@ var COMMANDS = {
 		pushMessage('!', args.text, args.time, 'warn')
 	},
 	joined: function(args) {
-		// TEMP
-		pushMessage('*', args.nick + " joined", args.time, 'info')
+		users[args.nick] = true
+		updateUsers()
 	},
 	left: function(args) {
-		// TEMP
-		pushMessage('*', args.nick + " left", args.time, 'info')
+		delete users[args.nick]
+		updateUsers()
 	},
 }
 
@@ -128,7 +137,7 @@ function updateInputSize() {
 	var input = $('#chatinput')
 	input.style.height = 0
 	input.style.height = input.scrollHeight + 'px'
-	document.body.style.marginBottom = $('footer').offsetHeight + 'px'
+	document.body.style.marginBottom = $('#footer').offsetHeight + 'px'
 
 	if (atBottom) {
 		window.scrollTo(0, document.body.scrollHeight)
@@ -219,6 +228,14 @@ function updateTitle() {
 	}
 	title += 'hack.chat'
 	document.title = title
+}
+
+var users = {}
+
+function updateUsers() {
+	var usersArr = Object.keys(users)
+	usersArr.sort()
+	$('#users').textContent = usersArr.join("\n")
 }
 
 

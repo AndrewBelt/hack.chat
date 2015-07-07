@@ -116,10 +116,12 @@ var COMMANDS = {
 			}
 		}
 
-		// Announce the new user
-		broadcast(channel, {cmd: 'joined', nick: nick})
+		// Formally join channel
 		this.channel = channel
 		this.nick = nick
+		
+		// Announce the new user
+		broadcast(channel, {cmd: 'joined', nick: nick})
 	},
 
 	chat: function(args) {

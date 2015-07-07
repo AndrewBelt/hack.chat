@@ -12,7 +12,12 @@ html(lang="en")
 		.container
 			#messages.messages
 		
-		footer.hidden
+		#footer.hidden
 			.container
 				form#chatform.messages
 					textarea#chatinput(type='text', autocomplete='off')
+
+		#sidebar
+			#sidebar-content.hidden
+				p Users online:
+				pre#users
