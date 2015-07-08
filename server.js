@@ -3,7 +3,7 @@ var ws = require('ws')
 
 var config = JSON.parse(fs.readFileSync('./config.json'))
 
-var server = new ws.Server({host: '127.0.0.1', port: 6060})
+var server = new ws.Server({host: '0.0.0.0', port: 6060})
 
 server.on('connection', function(socket) {
 	socket.on('message', function(data) {
