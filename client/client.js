@@ -128,7 +128,7 @@ var COMMANDS = {
 			users[nicks[i]] = true
 		}
 		updateUsers()
-		pushMessage('*', "Users online: " + nicks.join("\n"), Date.now(), 'info')
+		pushMessage('*', "Users online: " + nicks.join(", "), Date.now(), 'info')
 	},
 	onlineAdd: function(args) {
 		var nick = args.nick
