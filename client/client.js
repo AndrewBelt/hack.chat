@@ -54,8 +54,8 @@ window.onload = function() {
 var ws
 
 function join(channel, nick) {
-	ws = new WebSocket('wss://' + document.domain + '/chat-ws')
-	// ws = new WebSocket('ws://' + document.domain + ':6060')
+	ws = new WebSocket('ws://' + document.domain + ':6060')
+	// ws = new WebSocket('wss://' + document.domain + '/chat-ws')
 
 	ws.onopen = function() {
 		ws.send(JSON.stringify({cmd: 'join', channel: channel, nick: nick}))
