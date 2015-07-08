@@ -26,7 +26,7 @@ server.on('connection', function(socket) {
 
 	socket.on('close', function() {
 		if (socket.channel) {
-			broadcast(socket.channel, {cmd: 'left', nick: socket.nick})
+			broadcast(socket.channel, {cmd: 'onlineRemove', nick: socket.nick})
 		}
 	})
 })
@@ -108,20 +108,22 @@ var COMMANDS = {
 			return
 		}
 
-		// Welcome the new user
-		send(this, {cmd: 'info', text: "Welcome, " + nick + "!"})
-		for (var client of server.clients) {
-			if (client.channel === channel) {
-				send(this, {cmd: 'joined', nick: client.nick})
-			}
-		}
+		// Announce the new user
+		broadcast(channel, {cmd: 'onlineAdd', nick: nick})
 
 		// Formally join channel
 		this.channel = channel
 		this.nick = nick
 
-		// Announce the new user
-		broadcast(channel, {cmd: 'joined', nick: nick})
+		// Welcome the new user
+		send(this, {cmd: 'info', text: "Welcome, " + nick + "!"})
+		var nicks = []
+		for (var client of server.clients) {
+			if (client.channel === channel) {
+				nicks.push(client.nick)
+			}
+		}
+		send(this, {cmd: 'onlineSet', nicks: nicks})
 	},
 
 	chat: function(args) {

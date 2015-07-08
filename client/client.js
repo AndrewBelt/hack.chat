@@ -121,13 +121,26 @@ var COMMANDS = {
 	warn: function(args) {
 		pushMessage('!', args.text, args.time, 'warn')
 	},
-	joined: function(args) {
-		users[args.nick] = true
+	onlineSet: function(args) {
+		var nicks = args.nicks
+		for (var i = 0; i < nicks.length; i++) {
+			users[nicks[i]] = true
+		}
 		updateUsers()
 	},
-	left: function(args) {
-		delete users[args.nick]
+	onlineAdd: function(args) {
+		var nick = args.nick
+		users[nick] = true
 		updateUsers()
+		if (nick != myNick) {
+			pushMessage('*', nick + " joined", Date.now(), 'info')
+		}
+	},
+	onlineRemove: function(args) {
+		var nick = args.nick
+		delete users[nick]
+		updateUsers()
+		pushMessage('*', nick + " left", Date.now(), 'info')
 	},
 }
 
@@ -192,6 +205,7 @@ function parseLinks(g0) {
 		url = "https://hack.chat/" + url
 	}
 	a.href = url
+	a.target = '_blank'
 	return a.outerHTML
 }
 
