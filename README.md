@@ -1,4 +1,18 @@
+# [hack.chat](https://hack.chat/)
+
+> A minimal, distraction-free chat application for the web
+
 [![hack.chat screenshot](https://raw.githubusercontent.com/AndrewBelt/hack.chat/master/screenshot.png)](https://hack.chat/)
+
+
+## CLI
+
+```
+$ npm install --global hack.chat
+```
+```
+$ hack.chat
+```
 
 ## Local install
 

@@ -2,32 +2,33 @@
   "name": "hack.chat",
   "version": "1.0.0",
   "description": "A minimal, distraction-free chat application for the web",
-  "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AndrewBelt/hack.chat.git"
-  },
-  "keywords": [
-    "chat"
-  ],
+  "license": "GPL-3.0",
+  "repository": "AndrewBelt/hack.chat",
   "author": {
     "name": "Andrew Belt",
     "email": "andrewpbelt@gmail.com",
     "url": "https://github.com/AndrewBelt"
   },
-  "license": "GPL-3.0",
-  "bugs": {
-    "url": "https://github.com/AndrewBelt/hack.chat/issues"
-  },
-  "homepage": "https://github.com/AndrewBelt/hack.chat",
-  "dependencies": {
-    "ws": "^0.7.2"
-  },
+  "bin": "cli.js",
   "engines": {
     "node": ">=0.12.0"
+  },
+  "files": [
+    "client/",
+    "config.json",
+    "index.js",
+    "cli.js"
+  ],
+  "keywords": [
+    "cli-app",
+    "cli",
+    "chat",
+    "minimal"
+  ],
+  "dependencies": {
+    "cross-spawn": "^1.0.3",
+    "http-server": "^0.8.0",
+    "meow": "^3.3.0",
+    "ws": "^0.7.2"
   }
 }
