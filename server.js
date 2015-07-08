@@ -115,8 +115,7 @@ var COMMANDS = {
 		this.channel = channel
 		this.nick = nick
 
-		// Welcome the new user
-		send(this, {cmd: 'info', text: "Welcome, " + nick + "!"})
+		// Set the online users for new user
 		var nicks = []
 		for (var client of server.clients) {
 			if (client.channel === channel) {

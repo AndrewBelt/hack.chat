@@ -123,10 +123,12 @@ var COMMANDS = {
 	},
 	onlineSet: function(args) {
 		var nicks = args.nicks
+		nicks.sort()
 		for (var i = 0; i < nicks.length; i++) {
 			users[nicks[i]] = true
 		}
 		updateUsers()
+		pushMessage('*', "Users online: " + nicks.join("\n"), Date.now(), 'info')
 	},
 	onlineAdd: function(args) {
 		var nick = args.nick

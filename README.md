@@ -10,7 +10,8 @@
 
 ### Client
 * `cd client`
+* `npm install -g less jade http-server`
 * `make`
-* `npm install -g http-server && http-server`
+* `http-server`
 
 Change the "motd" in `client.js` to your liking, and go to http://127.0.0.1:8080.
