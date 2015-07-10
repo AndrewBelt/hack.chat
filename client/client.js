@@ -239,7 +239,7 @@ window.onscroll = function() {
 }
 
 function isAtBottom() {
-	return (window.innerHeight + window.scrollY) >= document.body.scrollHeight
+	return (window.innerHeight + window.scrollY) >= document.body.scrollHeight-1
 }
 
 function updateTitle() {
