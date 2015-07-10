@@ -1,6 +1,3 @@
-var myNick
-
-
 var motd = [
 	"                            _           _         _       _   ",
 	"                           | |_ ___ ___| |_   ___| |_ ___| |_ ",
@@ -39,26 +36,27 @@ window.onload = function() {
 	loadScheme()
 
 	var channel = window.location.search.replace(/^\?/, '')
-	if (channel != '') {
-		myNick = prompt('Nickname:')
-		if (myNick) {
-			join(channel, myNick)
-		}
+	if (channel == '') {
+		pushMessage('', motd)
 	}
 	else {
-		pushMessage('', motd)
+		join(channel)
 	}
 }
 
 
 var ws
+var myNick
 
-function join(channel, nick) {
+function join(channel) {
 	ws = new WebSocket('ws://' + document.domain + ':6060')
 	// ws = new WebSocket('wss://' + document.domain + '/chat-ws')
 
 	ws.onopen = function() {
-		ws.send(JSON.stringify({cmd: 'join', channel: channel, nick: nick}))
+		myNick = prompt('Nickname:')
+		if (myNick) {
+			ws.send(JSON.stringify({cmd: 'join', channel: channel, nick: myNick}))
+		}
 	}
 
 	ws.onmessage = function(message) {
@@ -181,11 +179,16 @@ function pushMessage(nick, text, time, cls) {
 	textEl.classList.add('text')
 
 	textEl.textContent = text || ''
-	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/).*?(?=[,.!?:)]?\s|$)/g, parseLinks)
-	// TODO
-	// This needs to parse in a single regex
-	textEl.innerHTML = textEl.innerHTML.replace(/\$\$(\S.*?\S|\S)\$\$/g, parseMath)
-	textEl.innerHTML = textEl.innerHTML.replace(/\$(\S.*?\S|\S)\$/g, parseMath)
+	textEl.innerHTML = textEl.innerHTML.replace(/(\s|^)((\?|https?:\/\/)\S+?)(?=[,.!?:)]?\s|$)/g, parseLinks)
+	try {
+		renderMathInElement(textEl, {delimiters: [
+		  {left: "$$", right: "$$", display: true},
+		  {left: "$", right: "$", display: false},
+		]})
+	}
+	catch (e) {
+		console.warn(e)
+	}
 	messageEl.appendChild(textEl)
 
 	var atBottom = isAtBottom()
@@ -199,31 +202,21 @@ function pushMessage(nick, text, time, cls) {
 }
 
 
-function parseLinks(g0) {
+function send(data) {
+	ws.send(JSON.stringify(data))
+}
+
+
+function parseLinks(g0, g1, g2) {
 	var a = document.createElement('a')
 	a.innerHTML = g0
 	var url = a.textContent
 	if (url[0] == '?') {
-		url = "https://hack.chat/" + url
+		url = "/" + url
 	}
 	a.href = url
 	a.target = '_blank'
-	return a.outerHTML
-}
-
-
-function parseMath(g0, g1) {
-	var display = (g0.substr(0, 2) == '$$')
-	try {
-		var div = document.createElement('div')
-		div.innerHTML = g1
-		var html = katex.renderToString(div.textContent, {displayMode: display})
-		return html
-	}
-	catch (e) {
-		console.warn(e)
-		return g0
-	}
+	return g1 + a.outerHTML
 }
 
 
@@ -273,7 +266,7 @@ function updateUsers() {
 
 
 function setScheme(name) {
-	$('#scheme-link').href = "schemes/" + name + ".css"
+	$('#scheme-link').href = "/schemes/" + name + ".css"
 	if (localStorage) {
 		localStorage['scheme'] = name
 	}

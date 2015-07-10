@@ -26,7 +26,7 @@ server.on('connection', function(socket) {
 
 	socket.on('close', function() {
 		if (socket.channel) {
-			broadcast(socket.channel, {cmd: 'onlineRemove', nick: socket.nick})
+			broadcast({cmd: 'onlineRemove', nick: socket.nick}, socket.channel)
 		}
 	})
 })
@@ -42,15 +42,16 @@ function send(client, data) {
 	}
 }
 
-function broadcast(channel, data) {
+function broadcast(data, channel) {
 	for (var client of server.clients) {
-		if (client.channel === channel) {
+		if (channel ? client.channel === channel : client.channel) {
 			send(client, data)
 		}
 	}
 }
 
 function nicknameValid(nick) {
+	if (nick == '*') return false
 	// allow all actual ascii characters
 	return /^[\x20-\x7e]{1,32}$/.test(nick)
 }
@@ -109,7 +110,7 @@ var COMMANDS = {
 		}
 
 		// Announce the new user
-		broadcast(channel, {cmd: 'onlineAdd', nick: nick})
+		broadcast({cmd: 'onlineAdd', nick: nick}, channel)
 
 		// Formally join channel
 		this.channel = channel
@@ -135,38 +136,90 @@ var COMMANDS = {
 		text = text.replace(/\n{3,}/g, "\n\n")
 		if (text == '') return
 
-		if (POLICE.frisk(getAddress(this), 1 + text.length / 300)) {
+		if (POLICE.frisk(getAddress(this), 1 + text.length / 400)) {
 			send(this, {cmd: 'warn', text: "Your IP is sending too much text. Wait a moment and try again. Here was your message:\n\n" + text})
 			return
 		}
 
-		var args = {cmd: 'chat', nick: this.nick, text: text}
+		var data = {cmd: 'chat', nick: this.nick, text: text}
 		if (this.admin) {
-			args.admin = true
+			data.admin = true
 		}
-		broadcast(this.channel, args)
+		broadcast(data, this.channel)
+	},
+
+	// Admin stuff below this point
+
+	auth: function(args) {
+		password = String(args.password)
+		if (POLICE.frisk(getAddress(this), 1)) {
+			return
+		}
+		if (password != config.password) {
+			this.send({cmd: 'warn', text: "Incorrect password"})
+			return
+		}
+		this.send({cmd: 'info', text: "Successfully authenticated"})
+		this.admin = true
 	},
 
 	ban: function(args) {
+		channel = String(args.channel)
 		nick = String(args.nick)
 
 		if (!this.admin) {
 			return
 		}
+		if (!channel) {
+			channel = this.channel
+		}
 
 		var badClient
 		for (var client of server.clients) {
-			if (client.channel == this.channel && client.nick == nick) {
+			if (client.channel == channel && client.nick == nick) {
 				badClient = client
 			}
 		}
 
-		if (badClient) {
-			POLICE.arrest(getAddress(badClient))
-			send(badClient, {cmd: 'warn', text: "You have been banned. :("})
-			send(this, {cmd: 'info', text: "Banned " + badClient.nick})
+		if (!badClient) {
+			return
 		}
-	}
+
+		POLICE.arrest(getAddress(badClient))
+		send(badClient, {cmd: 'warn', text: "You have been banned. :("})
+		send(this, {cmd: 'info', text: "Banned " + badClient.nick})
+	},
+
+	listUsers: function() {
+		if (!this.admin) {
+			return
+		}
+		var channels = {}
+		for (var client of server.clients) {
+			if (client.channel) {
+				if (!channels[client.channel]) {
+					channels[client.channel] = []
+				}
+				channels[client.channel].push(client.nick)
+			}
+		}
+
+		var lines = []
+		for (var channel in channels) {
+			lines.push(channel + ": " + channels[channel].join(", "))
+		}
+		var text = server.clients.length + " users online\n\n"
+		text += lines.join("\n")
+		send(this, {cmd: 'info', text: text})
+	},
+
+	broadcast: function(args) {
+		text = String(args.text)
+		if (!this.admin) {
+			return
+		}
+		broadcast({cmd: 'info', text: "Server broadcast: " + text})
+	},
 }
 
 

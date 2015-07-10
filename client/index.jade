@@ -3,11 +3,12 @@ html
 	head
 		meta(charset="utf-8")
 		title hack.chat
-		link(rel="stylesheet", href="style.css")
-		link(rel="stylesheet", href="//cdnjs.cloudflare.com/ajax/libs/KaTeX/0.3.0/katex.min.css")
-		link#scheme-link(rel="stylesheet", href="schemes/atelier-dune.css")
-		script(src="//cdnjs.cloudflare.com/ajax/libs/KaTeX/0.3.0/katex.min.js")
-		script(src="client.js")
+		link(rel="stylesheet", href="/style.css")
+		link(rel="stylesheet", href="/katex/katex.min.css")
+		link#scheme-link(rel="stylesheet", href="/schemes/atelier-dune.css")
+		script(src="/katex/katex.min.js")
+		script(src="/katex/contrib/auto-render.min.js")
+		script(src="/client.js")
 	body
 		.container
 			#messages.messages
