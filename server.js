@@ -25,8 +25,13 @@ server.on('connection', function(socket) {
 	})
 
 	socket.on('close', function() {
-		if (socket.channel) {
-			broadcast({cmd: 'onlineRemove', nick: socket.nick}, socket.channel)
+		try {
+			if (socket.channel) {
+				broadcast({cmd: 'onlineRemove', nick: socket.nick}, socket.channel)
+			}
+		}
+		catch (e) {
+			console.warn(e.stack)
 		}
 	})
 })
@@ -35,13 +40,18 @@ function send(client, data) {
 	// Add timestamp to command
 	data.time = Date.now()
 	try {
-		client.send(JSON.stringify(data))
+		if (client.readyState == ws.OPEN) {
+			client.send(JSON.stringify(data))
+		}
 	}
 	catch (e) {
-		console.warn(e.stack)
+		// Ignore exceptions thrown by client.send()
 	}
 }
 
+/** Sends data to all clients
+channel: if not null, restricts broadcast to clients in the channel
+*/
 function broadcast(data, channel) {
 	for (var client of server.clients) {
 		if (channel ? client.channel === channel : client.channel) {
@@ -51,13 +61,14 @@ function broadcast(data, channel) {
 }
 
 function nicknameValid(nick) {
-	if (nick == '*') return false
-	// allow all actual ascii characters
+	if (/\[$,*!?]/.test(nick)) return false
+	// allow all other "normal" ascii characters
 	return /^[\x20-\x7e]{1,32}$/.test(nick)
 }
 
 function getAddress(client) {
-	return client.upgradeReq.headers['x-forwarded-for'] || client.upgradeReq.connection.remoteAddress
+	return client.upgradeReq.headers['x-forwarded-for']
+	// return client.upgradeReq.connection.remoteAddress
 }
 
 
@@ -67,6 +78,11 @@ var COMMANDS = {
 		channel = String(args.channel)
 		nick = String(args.nick)
 
+		if (POLICE.frisk(getAddress(this), 3)) {
+			send(this, {cmd: 'warn', text: "You cannot join a channel while your IP is being rate-limited. Wait a moment and try again."})
+			return
+		}
+
 		if (this.nick) {
 			// Already joined
 			return
@@ -74,8 +90,8 @@ var COMMANDS = {
 
 		// Process channel name
 		channel = channel.trim()
-		if (!channel) {
-			// Must join an actual channel
+		if (channel == '') {
+			// Must join a non-blank channel
 			return
 		}
 
@@ -102,11 +118,6 @@ var COMMANDS = {
 					return
 				}
 			}
-		}
-
-		if (POLICE.frisk(getAddress(this), 2)) {
-			send(this, {cmd: 'warn', text: "You cannot join a channel while your IP is being rate-limited. Wait a moment and try again."})
-			return
 		}
 
 		// Announce the new user
@@ -136,7 +147,8 @@ var COMMANDS = {
 		text = text.replace(/\n{3,}/g, "\n\n")
 		if (text == '') return
 
-		if (POLICE.frisk(getAddress(this), 1 + text.length / 400)) {
+		var score = 1 + text.length / 83 / 4
+		if (POLICE.frisk(getAddress(this), score)) {
 			send(this, {cmd: 'warn', text: "Your IP is sending too much text. Wait a moment and try again. Here was your message:\n\n" + text})
 			return
 		}
@@ -149,19 +161,6 @@ var COMMANDS = {
 	},
 
 	// Admin stuff below this point
-
-	auth: function(args) {
-		password = String(args.password)
-		if (POLICE.frisk(getAddress(this), 1)) {
-			return
-		}
-		if (password != config.password) {
-			this.send({cmd: 'warn', text: "Incorrect password"})
-			return
-		}
-		this.send({cmd: 'info', text: "Successfully authenticated"})
-		this.admin = true
-	},
 
 	ban: function(args) {
 		channel = String(args.channel)
@@ -206,7 +205,7 @@ var COMMANDS = {
 
 		var lines = []
 		for (var channel in channels) {
-			lines.push(channel + ": " + channels[channel].join(", "))
+			lines.push("?" + channel + " " + channels[channel].join(", "))
 		}
 		var text = server.clients.length + " users online\n\n"
 		text += lines.join("\n")

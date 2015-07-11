@@ -1,4 +1,4 @@
-var motd = [
+var frontpage = [
 	"                            _           _         _       _   ",
 	"                           | |_ ___ ___| |_   ___| |_ ___| |_ ",
 	"                           |   |_ ||  _| '_| |  _|   |_ ||  _|",
@@ -15,14 +15,10 @@ var motd = [
 	"And here's a random one generated just for you: ?" + Math.random().toString(36).substr(2, 8),
 	"",
 	"",
-	"",
 	"Formatting:",
-	"Whitespace is preserved, so source code can be shared properly.",
-	"Surround LaTeX with $ for inline style $\\zeta(2) = \\pi^2/6$, or $$ for display.",
+	"Whitespace is preserved, so source code can be pasted verbatim.",
+	"Surround LaTeX with a dollar sign for inline style $\\zeta(2) = \\pi^2/6$, and two dollars for display.",
 	"$$\\int_0^1 \\int_0^1 \\frac{1}{1-xy} dx dy = \\frac{\\pi^2}{6}$$",
-	"",
-	"",
-	"Vortico is the one and only admin. All others claiming to be are imposters.",
 	"",
 	"GitHub repo: https://github.com/AndrewBelt/hack.chat",
 	"Server and client released under the GNU General Public License.",
@@ -37,7 +33,7 @@ window.onload = function() {
 
 	var channel = window.location.search.replace(/^\?/, '')
 	if (channel == '') {
-		pushMessage('', motd)
+		pushMessage('', frontpage)
 	}
 	else {
 		join(channel)
@@ -49,13 +45,13 @@ var ws
 var myNick
 
 function join(channel) {
+	// ws = new WebSocket('wss://hack.chat/chat-ws')
 	ws = new WebSocket('ws://' + document.domain + ':6060')
-	// ws = new WebSocket('wss://' + document.domain + '/chat-ws')
 
 	ws.onopen = function() {
 		myNick = prompt('Nickname:')
 		if (myNick) {
-			ws.send(JSON.stringify({cmd: 'join', channel: channel, nick: myNick}))
+			send({cmd: 'join', channel: channel, nick: myNick})
 		}
 	}
 
@@ -79,7 +75,7 @@ function join(channel) {
 	$('#chatinput').onkeydown = function(e) {
 		if (e.keyCode == 13 && !e.shiftKey) {
 			if ($('#chatinput').value != '') {
-				ws.send(JSON.stringify({cmd: 'chat', text: $('#chatinput').value}))
+				send({cmd: 'chat', text: $('#chatinput').value})
 				$('#chatinput').value = ''
 				updateInputSize()
 			}
@@ -173,13 +169,17 @@ function pushMessage(nick, text, time, cls) {
 		var date = new Date(time)
 		nickEl.title = date.toLocaleString()
 	}
+	nickEl.onclick = function() {
+		insertAtCursor("@" + nick + " ")
+		$('#chatinput').focus()
+	}
 	messageEl.appendChild(nickEl)
 
 	var textEl = document.createElement('pre')
 	textEl.classList.add('text')
 
 	textEl.textContent = text || ''
-	textEl.innerHTML = textEl.innerHTML.replace(/(\s|^)((\?|https?:\/\/)\S+?)(?=[,.!?:)]?\s|$)/g, parseLinks)
+	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
 	try {
 		renderMathInElement(textEl, {delimiters: [
 		  {left: "$$", right: "$$", display: true},
@@ -202,12 +202,19 @@ function pushMessage(nick, text, time, cls) {
 }
 
 
+function insertAtCursor(text) {
+	var input = $('#chatinput')
+	var start = input.selectionStart || 0
+	input.value = input.value.substr(0, start) + text + input.value.substr(start)
+}
+
+
 function send(data) {
 	ws.send(JSON.stringify(data))
 }
 
 
-function parseLinks(g0, g1, g2) {
+function parseLinks(g0) {
 	var a = document.createElement('a')
 	a.innerHTML = g0
 	var url = a.textContent
@@ -216,7 +223,7 @@ function parseLinks(g0, g1, g2) {
 	}
 	a.href = url
 	a.target = '_blank'
-	return g1 + a.outerHTML
+	return a.outerHTML
 }
 
 
