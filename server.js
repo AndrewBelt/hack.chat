@@ -1,5 +1,6 @@
 var fs = require('fs')
 var ws = require('ws')
+var XRegExp = require('xregexp').XRegExp
 
 var config = JSON.parse(fs.readFileSync('./config.json'))
 
@@ -63,7 +64,8 @@ function broadcast(data, channel) {
 function nicknameValid(nick) {
 	if (/[$,*!?]/.test(nick)) return false
 	// allow all other "normal" ascii characters
-	return /^[\x20-\x7e]{1,32}$/.test(nick)
+  var unicodeNick = XRegExp('^[\\p{L}\\p{N}]{1,32}')
+	return unicodeNick.test(nick)
 }
 
 function getAddress(client) {
