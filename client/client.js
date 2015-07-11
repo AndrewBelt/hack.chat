@@ -259,6 +259,22 @@ $('#chatinput').onkeydown = function(e) {
 			e.preventDefault()
 		}
 	}
+	else if (e.keyCode == 9) {
+		// Tab completion
+		var contents = e.target.value
+		var parts = contents.split('@')
+		var stub = parts.pop()
+		e.stopPropagation() // don't change focus
+		e.preventDefault()
+		// select nicks starting with our stub
+		var matches = Object.keys(users).filter(function (nick) {
+			return nick.indexOf(stub) == 0 
+		})
+		if (matches.length == 1) {
+			e.target.value = parts.join('@') + '@' + matches[0] + ' '
+		}
+		updateInputSize()
+	}
 }
 
 function updateInputSize() {
