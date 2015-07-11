@@ -3,7 +3,7 @@ var ws = require('ws')
 
 var config = JSON.parse(fs.readFileSync('./config.json'))
 
-var server = new ws.Server({host: '0.0.0.0', port: 6060})
+var server = new ws.Server({host: config.host, port: config.port})
 
 server.on('connection', function(socket) {
 	socket.on('message', function(data) {
@@ -67,8 +67,16 @@ function nicknameValid(nick) {
 }
 
 function getAddress(client) {
-	return client.upgradeReq.headers['x-forwarded-for']
-	// return client.upgradeReq.connection.remoteAddress
+	if (config.x_forwarded_for) {
+		// The remoteAddress is 127.0.0.1 since if all connections
+		// originate from a proxy (e.g. nginx).
+		// You must write the x-forwarded-for header to determine the
+		// client's real IP address.
+		return client.upgradeReq.headers['x-forwarded-for']
+	}
+	else {
+		return client.upgradeReq.connection.remoteAddress
+	}
 }
 
 
