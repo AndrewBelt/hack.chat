@@ -47,8 +47,14 @@ var myChannel
 var lastSent = ""
 
 function join(channel) {
-	// ws = new WebSocket('wss://hack.chat/chat-ws')
-	ws = new WebSocket('ws://' + document.domain + ':6060')
+	if (document.domain == 'hack.chat') {
+		// For https://hack.chat/
+		ws = new WebSocket('wss://hack.chat/chat-ws')
+	}
+	else {
+		// for local installs
+		ws = new WebSocket('ws://' + document.domain + ':6060')
+	}
 
 	ws.onopen = function() {
 		myNick = prompt('Nickname:')
