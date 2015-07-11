@@ -371,8 +371,6 @@ if (localStorage) {
 		setScheme(scheme)
 	}
 }
-<<<<<<< HEAD
-=======
 
 $('#scheme-selector').value = currentScheme
->>>>>>> upstream/master
+
