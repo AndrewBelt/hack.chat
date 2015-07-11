@@ -1,7 +1,0 @@
-{
-  "admin": "AzureDiamond",
-  "password": "hunter2",
-  "host": "127.0.0.1",
-  "port": "6060",
-  "x_forwarded_for": false
-}
