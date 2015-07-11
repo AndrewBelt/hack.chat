@@ -53,9 +53,10 @@ function join(channel) {
 	// ws = new WebSocket('wss://' + document.domain + '/chat-ws')
 
 	ws.onopen = function() {
-		myNick = prompt('Nickname:')
+        myNick = localStorage.getItem("nick") || prompt('Nickname:')
 		if (myNick) {
 			ws.send(JSON.stringify({cmd: 'join', channel: channel, nick: myNick}))
+            localStorage.setItem("nick", myNick)
 		}
 	}
 
