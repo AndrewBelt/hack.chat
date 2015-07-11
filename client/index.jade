@@ -8,17 +8,29 @@ html
 		link#scheme-link(rel="stylesheet", href="/schemes/atelier-dune.css")
 		script(src="/katex/katex.min.js")
 		script(src="/katex/contrib/auto-render.min.js")
-		script(src="/client.js")
 	body
 		.container
 			#messages.messages
 
-		#footer.hidden
+		#footer
 			.container
 				form#chatform.messages
 					textarea#chatinput(type='text', autocomplete='off')
 
 		#sidebar
 			#sidebar-content.hidden
-				p Users online:
+				p
+					input#pin-sidebar(type="checkbox")
+					label(for="pin-sidebar") Pin sidebar
+				h4 Settings
+				p
+					input#joined-left(type="checkbox", checked)
+					label(for="joined-left") Join/left notify
+				p
+					button#clear-history Clear history
+				h4 Color scheme
+				select#scheme-selector
+				h4 Users online
 				pre#users
+
+		script(src="/client.js")

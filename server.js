@@ -215,7 +215,7 @@ var COMMANDS = {
 		for (var channel in channels) {
 			lines.push("?" + channel + " " + channels[channel].join(", "))
 		}
-		var text = server.clients.length + " users online\n\n"
+		var text = server.clients.length + " users online:\n\n"
 		text += lines.join("\n")
 		send(this, {cmd: 'info', text: text})
 	},
