@@ -29,20 +29,21 @@ function $(query) {return document.querySelector(query)}
 
 
 window.onload = function() {
-	var channel = window.location.search.replace(/^\?/, '')
-	if (channel == '') {
+	myChannel = window.location.search.replace(/^\?/, '')
+	if (myChannel == '') {
 		pushMessage('', frontpage)
 		$('#footer').classList.add('hidden')
 		$('#sidebar').classList.add('hidden')
 	}
 	else {
-		join(channel)
+		join(myChannel)
 	}
 }
 
 
 var ws
 var myNick
+var myChannel
 var lastSent = ""
 
 function join(channel) {
@@ -213,11 +214,16 @@ function updateTitle() {
 		unread = 0
 	}
 
-	var title = ''
-	if (unread > 0) {
-		title += '(' + unread + ') '
+	var title
+	if (myChannel) {
+		title = "?" + myChannel
 	}
-	title += 'hack.chat'
+	else {
+		title = "hack.chat"
+	}
+	if (unread > 0) {
+		title = '(' + unread + ') ' + title
+	}
 	document.title = title
 }
 
