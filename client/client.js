@@ -49,10 +49,19 @@ var ws
 var myNick
 
 function join(channel) {
-	ws = new WebSocket('ws://' + document.domain + ':6060')
-	// ws = new WebSocket('wss://' + document.domain + '/chat-ws')
 
+	var timerID=0
+	var webSocketLocation = 'ws://' + document.domain + ':6060'
+
+	ws = new WebSocket(webSocketLocation)
+	// ws = new WebSocket('wss://' + document.domain + '/chat-ws')
 	ws.onopen = function() {
+		if(window.timerID){
+			pushMessage('*', "Connected to server.", Date.now(), 'info')
+			window.clearInterval(window.timerID)
+			window.timerID=0
+		}
+		
 		myNick = prompt('Nickname:')
 		if (myNick) {
 			ws.send(JSON.stringify({cmd: 'join', channel: channel, nick: myNick}))
@@ -67,7 +76,10 @@ function join(channel) {
 	}
 
 	ws.onclose = function() {
-		pushMessage('!', "Server disconnected", Date.now(), 'warn')
+		if(!window.timerID){
+			pushMessage('!', "Server disconnected. Attempting to reconnect...", Date.now(), 'warn')
+			window.timerID=setInterval(function(){join(channel)}, 500)
+		}
 	}
 
 	// prepare footer
