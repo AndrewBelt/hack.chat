@@ -57,7 +57,7 @@ function nicknameValid(nick) {
 }
 
 function getAddress(client) {
-	return client.upgradeReq.headers['x-forwarded-for'] || client.upgradeReq.connection.remoteAddress
+	return client.upgradeReq.connection.remoteAddress
 }
 
 
