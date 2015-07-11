@@ -61,7 +61,7 @@ function broadcast(data, channel) {
 }
 
 function nicknameValid(nick) {
-	if (/\[$,*!?]/.test(nick)) return false
+	if (/[$,*!?]/.test(nick)) return false
 	// allow all other "normal" ascii characters
 	return /^[\x20-\x7e]{1,32}$/.test(nick)
 }
@@ -215,7 +215,7 @@ var COMMANDS = {
 		for (var channel in channels) {
 			lines.push("?" + channel + " " + channels[channel].join(", "))
 		}
-		var text = server.clients.length + " users online\n\n"
+		var text = server.clients.length + " users online:\n\n"
 		text += lines.join("\n")
 		send(this, {cmd: 'info', text: text})
 	},

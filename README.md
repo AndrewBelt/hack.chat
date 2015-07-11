@@ -6,7 +6,8 @@
 * `git clone https://github.com/AndrewBelt/hack.chat.git`
 * `cd hack.chat`
 * `npm install`
-* `npm start`
+* Copy `config-sample.json` to `config.json` and edit if needed.
+* `npm start` or `node server.js`
 
 ### Client
 * `cd client`
@@ -14,4 +15,4 @@
 * `make`
 * `http-server`
 
-Change the "motd" in `client.js` to your liking, and go to http://127.0.0.1:8080.
+Change the "frontpage" text in `client.js` to your liking, and go to http://127.0.0.1:8080.

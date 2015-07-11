@@ -29,24 +29,32 @@ function $(query) {return document.querySelector(query)}
 
 
 window.onload = function() {
-	loadScheme()
-
-	var channel = window.location.search.replace(/^\?/, '')
-	if (channel == '') {
+	myChannel = window.location.search.replace(/^\?/, '')
+	if (myChannel == '') {
 		pushMessage('', frontpage)
+		$('#footer').classList.add('hidden')
+		$('#sidebar').classList.add('hidden')
 	}
 	else {
-		join(channel)
+		join(myChannel)
 	}
 }
 
 
 var ws
 var myNick
+var myChannel
+var lastSent = ""
 
 function join(channel) {
-	// ws = new WebSocket('wss://hack.chat/chat-ws')
-	ws = new WebSocket('ws://' + document.domain + ':6060')
+	if (document.domain == 'hack.chat') {
+		// For https://hack.chat/
+		ws = new WebSocket('wss://hack.chat/chat-ws')
+	}
+	else {
+		// for local installs
+		ws = new WebSocket('ws://' + document.domain + ':6060')
+	}
 
 	ws.onopen = function() {
 		myNick = prompt('Nickname:')
@@ -64,36 +72,6 @@ function join(channel) {
 
 	ws.onclose = function() {
 		pushMessage('!', "Server disconnected", Date.now(), 'warn')
-	}
-
-	// prepare footer
-	$('#footer').classList.remove('hidden')
-	$('#footer').onclick = function() {
-		$('#chatinput').focus()
-	}
-
-	$('#chatinput').onkeydown = function(e) {
-		if (e.keyCode == 13 && !e.shiftKey) {
-			if ($('#chatinput').value != '') {
-				send({cmd: 'chat', text: $('#chatinput').value})
-				$('#chatinput').value = ''
-				updateInputSize()
-			}
-			e.preventDefault()
-		}
-	}
-	$('#chatinput').focus()
-	$('#chatinput').addEventListener('input', function() {
-		updateInputSize()
-	})
-	updateInputSize()
-
-	// prepare sidebar
-	$('#sidebar').onmouseenter = function() {
-		$('#sidebar-content').classList.remove('hidden')
-	}
-	$('#sidebar').onmouseleave = function() {
-		$('#sidebar-content').classList.add('hidden')
 	}
 }
 
@@ -136,7 +114,7 @@ var COMMANDS = {
 		var nick = args.nick
 		users[nick] = true
 		updateUsers()
-		if (nick != myNick) {
+		if ($('#joined-left').checked) {
 			pushMessage('*', nick + " joined", Date.now(), 'info')
 		}
 	},
@@ -144,22 +122,10 @@ var COMMANDS = {
 		var nick = args.nick
 		delete users[nick]
 		updateUsers()
-		pushMessage('*', nick + " left", Date.now(), 'info')
+		if ($('#joined-left').checked) {
+			pushMessage('*', nick + " left", Date.now(), 'info')
+		}
 	},
-}
-
-
-function updateInputSize() {
-	var atBottom = isAtBottom()
-
-	var input = $('#chatinput')
-	input.style.height = 0
-	input.style.height = input.scrollHeight + 'px'
-	document.body.style.marginBottom = $('#footer').offsetHeight + 'px'
-
-	if (atBottom) {
-		window.scrollTo(0, document.body.scrollHeight)
-	}
 }
 
 
@@ -254,7 +220,7 @@ window.onscroll = function() {
 }
 
 function isAtBottom() {
-	return (window.innerHeight + window.scrollY) >= document.body.scrollHeight
+	return (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 1)
 }
 
 function updateTitle() {
@@ -262,14 +228,87 @@ function updateTitle() {
 		unread = 0
 	}
 
-	var title = ''
-	if (unread > 0) {
-		title += '(' + unread + ') '
+	var title
+	if (myChannel) {
+		title = "?" + myChannel
 	}
-	title += 'hack.chat'
+	else {
+		title = "hack.chat"
+	}
+	if (unread > 0) {
+		title = '(' + unread + ') ' + title
+	}
 	document.title = title
 }
 
+/* footer */
+
+$('#footer').onclick = function() {
+	$('#chatinput').focus()
+}
+
+$('#chatinput').onkeydown = function(e) {
+	if (e.keyCode == 13 /* ENTER */ && !e.shiftKey) {
+		if (e.target.value != '') {
+			var text = e.target.value
+			e.target.value = ''
+			send({cmd: 'chat', text: text})
+			lastSent = text
+			updateInputSize()
+		}
+		e.preventDefault()
+	}
+	else if (e.keyCode == 38 /* UP */) {
+		// Restore previous sent message
+		if (e.target.value == '') {
+			e.target.value = lastSent
+			e.target.selectionStart = e.target.value.length
+			updateInputSize()
+			e.preventDefault()
+		}
+	}
+}
+
+function updateInputSize() {
+	var atBottom = isAtBottom()
+
+	var input = $('#chatinput')
+	input.style.height = 0
+	input.style.height = input.scrollHeight + 'px'
+	document.body.style.marginBottom = $('#footer').offsetHeight + 'px'
+
+	if (atBottom) {
+		window.scrollTo(0, document.body.scrollHeight)
+	}
+}
+
+$('#chatinput').oninput = function() {
+	updateInputSize()
+}
+
+updateInputSize()
+$('#chatinput').focus()
+
+
+/* sidebar */
+
+$('#sidebar').onmouseenter = function() {
+	$('#sidebar-content').classList.remove('hidden')
+}
+
+$('#sidebar').onmouseleave = function() {
+	if (!$('#pin-sidebar').checked) {
+		$('#sidebar-content').classList.add('hidden')
+	}
+}
+
+$('#clear-history').onclick = function() {
+	// Delete children elements
+	var messages = $('#messages')
+	while (messages.firstChild) {
+		messages.removeChild(messages.firstChild)
+	}
+}
 
 var users = {}
 
@@ -279,19 +318,61 @@ function updateUsers() {
 	$('#users').textContent = usersArr.join("\n")
 }
 
+/* color scheme switcher */
 
-function setScheme(name) {
-	$('#scheme-link').href = "/schemes/" + name + ".css"
+var schemes = [
+	'android',
+	'atelier-dune',
+	'atelier-forest',
+	'atelier-heath',
+	'atelier-lakeside',
+	'atelier-seaside',
+	'bright',
+	'chalk',
+	'default',
+	'eighties',
+	'greenscreen',
+	'mocha',
+	'monokai',
+	'nese',
+	'ocean',
+	'pop',
+	'railscasts',
+	'solarized',
+	'tomorrow',
+]
+
+var currentScheme = 'atelier-dune'
+
+function setScheme(scheme) {
+	currentScheme = scheme
+	$('#scheme-link').href = "/schemes/" + scheme + ".css"
 	if (localStorage) {
-		localStorage['scheme'] = name
+		localStorage['scheme'] = scheme
 	}
 }
 
-function loadScheme() {
-	if (localStorage) {
-		var name = localStorage['scheme']
-		if (name) {
-			setScheme(name)
-		}
+// Add scheme options to dropdown selector
+schemes.forEach(function(scheme) {
+	var option = document.createElement('option')
+	option.textContent = scheme
+	option.value = scheme
+	$('#scheme-selector').appendChild(option)
+})
+
+$('#scheme-selector').onchange = function(e) {
+	setScheme(e.target.value)
+}
+
+// Load and select scheme from local storage if available
+if (localStorage) {
+	var scheme = localStorage['scheme']
+	if (scheme) {
+		setScheme(scheme)
 	}
 }
+<<<<<<< HEAD
+=======
+
+$('#scheme-selector').value = currentScheme
+>>>>>>> upstream/master
