@@ -1,3 +1,6 @@
+/* jshint asi: true */
+/* jshint esnext: true */
+
 var fs = require('fs')
 var ws = require('ws')
 
@@ -84,8 +87,8 @@ function getAddress(client) {
 // `this` bound to client
 var COMMANDS = {
 	join: function(args) {
-		channel = String(args.channel)
-		nick = String(args.nick)
+		var channel = String(args.channel)
+		var nick = String(args.nick)
 
 		if (POLICE.frisk(getAddress(this), 3)) {
 			send(this, {cmd: 'warn', text: "You cannot join a channel while your IP is being rate-limited. Wait a moment and try again."})
@@ -99,7 +102,7 @@ var COMMANDS = {
 
 		// Process channel name
 		channel = channel.trim()
-		if (channel == '') {
+		if (!channel) {
 			// Must join a non-blank channel
 			return
 		}
@@ -147,7 +150,7 @@ var COMMANDS = {
 	},
 
 	chat: function(args) {
-		text = String(args.text)
+		var text = String(args.text)
 
 		if (!this.channel) {
 			return
@@ -156,7 +159,9 @@ var COMMANDS = {
 		text = text.replace(/^\s*\n|^\s+$|\n\s*$/g, '')
 		// replace 3+ newlines with just 2 newlines
 		text = text.replace(/\n{3,}/g, "\n\n")
-		if (text == '') return
+		if (!text) {
+			return
+		}
 
 		var score = 1 + text.length / 83 / 4
 		if (POLICE.frisk(getAddress(this), score)) {
@@ -172,7 +177,7 @@ var COMMANDS = {
 	},
 
 	invite: function(args) {
-		nick = String(args.nick)
+		var nick = String(args.nick)
 		if (!this.channel) {
 			return
 		}
@@ -206,14 +211,14 @@ var COMMANDS = {
 	// Admin stuff below this point
 
 	ban: function(args) {
-		channel = String(args.channel)
-		nick = String(args.nick)
+		var channel = args.channel ? String(args.channel) : this.channel
+		var nick = String(args.nick)
 
 		if (!this.admin) {
 			return
 		}
 		if (!channel) {
-			channel = this.channel
+			return
 		}
 
 		var badClient
@@ -225,12 +230,13 @@ var COMMANDS = {
 		}
 
 		if (!badClient) {
+			send(this, {cmd: 'warn', text: "Could not find " + nick + " in ?" + channel})
 			return
 		}
 
 		POLICE.arrest(getAddress(badClient))
 		send(badClient, {cmd: 'warn', text: "You have been banned. :("})
-		send(this, {cmd: 'info', text: "Banned " + badClient.nick})
+		send(this, {cmd: 'info', text: "Banned " + nick + " in ?" + channel})
 	},
 
 	listUsers: function() {
@@ -257,7 +263,7 @@ var COMMANDS = {
 	},
 
 	broadcast: function(args) {
-		text = String(args.text)
+		var text = String(args.text)
 		if (!this.admin) {
 			return
 		}
@@ -269,8 +275,8 @@ var COMMANDS = {
 // rate limiter
 var POLICE = {
 	records: {},
-	halflife: 10000, // ms
-	threshold: 10,
+	halflife: 30000, // ms
+	threshold: 15,
 
 	frisk: function(id, deltaScore) {
 		var record = this.records[id]
