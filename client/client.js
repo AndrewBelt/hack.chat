@@ -151,6 +151,8 @@ function pushMessage(nick, text, time, cls) {
 	textEl.classList.add('text')
 
 	textEl.textContent = text || ''
+	// Temporary hotfix for \rule spamming, see https://github.com/Khan/KaTeX/issues/109
+	textEl.innerHTML = textEl.innerHTML.replace(/\\rule{.*?}{.*?}|\\\\\[.*?\]/g, '')
 	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
 	try {
 		renderMathInElement(textEl, {delimiters: [
