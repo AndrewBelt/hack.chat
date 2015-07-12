@@ -56,11 +56,24 @@ function join(channel) {
 		ws = new WebSocket('ws://' + document.domain + ':6060')
 	}
 
+	var wasConnected = false
 	ws.onopen = function() {
-		myNick = prompt('Nickname:')
+		wasConnected = true
+		if (!myNick) {
+			myNick = prompt('Nickname:')
+		}
 		if (myNick) {
 			send({cmd: 'join', channel: channel, nick: myNick})
 		}
+	}
+
+	ws.onclose = function() {
+		if (wasConnected) {
+			pushMessage('!', "Server disconnected. Attempting to reconnect...", Date.now(), 'warn')
+		}
+		window.setTimeout(function() {
+			join(channel)
+		}, 2000)
 	}
 
 	ws.onmessage = function(message) {
@@ -68,10 +81,6 @@ function join(channel) {
 		var cmd = args.cmd
 		var command = COMMANDS[cmd]
 		command.call(null, args)
-	}
-
-	ws.onclose = function() {
-		pushMessage('!', "Server disconnected", Date.now(), 'warn')
 	}
 }
 
