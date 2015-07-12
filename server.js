@@ -4,6 +4,7 @@ var ws = require('ws')
 var config = JSON.parse(fs.readFileSync('./config.json'))
 
 var server = new ws.Server({host: config.host, port: config.port})
+console.log("Started server on " + config.host + ":" + config.port)
 
 server.on('connection', function(socket) {
 	socket.on('message', function(data) {
@@ -148,7 +149,9 @@ var COMMANDS = {
 	chat: function(args) {
 		text = String(args.text)
 
-		if (!this.channel) return
+		if (!this.channel) {
+			return
+		}
 		// strip newlines from beginning and end
 		text = text.replace(/^\s*\n|^\s+$|\n\s*$/g, '')
 		// replace 3+ newlines with just 2 newlines
@@ -157,7 +160,7 @@ var COMMANDS = {
 
 		var score = 1 + text.length / 83 / 4
 		if (POLICE.frisk(getAddress(this), score)) {
-			send(this, {cmd: 'warn', text: "Your IP is sending too much text. Wait a moment and try again. Here was your message:\n\n" + text})
+			send(this, {cmd: 'warn', text: "Your IP is sending too much text. Wait a moment and try again.\nPress the up arrow key to restore your last message."})
 			return
 		}
 
@@ -166,6 +169,38 @@ var COMMANDS = {
 			data.admin = true
 		}
 		broadcast(data, this.channel)
+	},
+
+	invite: function(args) {
+		nick = String(args.nick)
+		if (!this.channel) {
+			return
+		}
+
+		if (POLICE.frisk(getAddress(this), 2)) {
+			send(this, {cmd: 'warn', text: "Your IP is being rate limited. Please wait a moment before sending another invite."})
+			return
+		}
+
+		var friend
+		for (var client of server.clients) {
+			// Find friend's client
+			if (client.channel == this.channel && client.nick == nick) {
+				friend = client
+				break
+			}
+		}
+		if (!friend) {
+			send(this, {cmd: 'warn', text: "Could not find user in channel"})
+			return
+		}
+		if (friend == this) {
+			// Ignore silently
+			return
+		}
+		var channel = Math.random().toString(36).substr(2, 8)
+		send(this, {cmd: 'info', text: "You invited " + friend.nick + " to ?" + channel})
+		send(friend, {cmd: 'info', text: this.nick + " invited you to ?" + channel})
 	},
 
 	// Admin stuff below this point
@@ -185,6 +220,7 @@ var COMMANDS = {
 		for (var client of server.clients) {
 			if (client.channel == channel && client.nick == nick) {
 				badClient = client
+				break
 			}
 		}
 

@@ -9,15 +9,15 @@ html
 		script(src="/katex/katex.min.js")
 		script(src="/katex/contrib/auto-render.min.js")
 	body
-		.container
+		article.container
 			#messages.messages
 
-		#footer
+		footer#footer
 			.container
 				form#chatform.messages
 					textarea#chatinput(type='text', autocomplete='off')
 
-		#sidebar
+		nav#sidebar
 			#sidebar-content.hidden
 				p
 					input#pin-sidebar(type="checkbox")
@@ -31,6 +31,7 @@ html
 				h4 Color scheme
 				select#scheme-selector
 				h4 Users online
-				pre#users
+				p (Click user to invite)
+				ul#users
 
 		script(src="/client.js")

@@ -95,25 +95,22 @@ var COMMANDS = {
 	},
 	onlineSet: function(args) {
 		var nicks = args.nicks
-		nicks.sort()
-		for (var i = 0; i < nicks.length; i++) {
-			users[nicks[i]] = true
-		}
-		updateUsers()
+		usersClear()
+		nicks.forEach(function(nick) {
+			userAdd(nick)
+		})
 		pushMessage('*', "Users online: " + nicks.join(", "), Date.now(), 'info')
 	},
 	onlineAdd: function(args) {
 		var nick = args.nick
-		users[nick] = true
-		updateUsers()
+		userAdd(nick)
 		if ($('#joined-left').checked) {
 			pushMessage('*', nick + " joined", Date.now(), 'info')
 		}
 	},
 	onlineRemove: function(args) {
 		var nick = args.nick
-		delete users[nick]
-		updateUsers()
+		userRemove(nick)
 		if ($('#joined-left').checked) {
 			pushMessage('*', nick + " left", Date.now(), 'info')
 		}
@@ -302,12 +299,34 @@ $('#clear-history').onclick = function() {
 	}
 }
 
-var users = {}
+function userAdd(nick) {
+	var user = document.createElement('li')
+	user.textContent = nick
+	user.onclick = userInvite
+	$('#users').appendChild(user)
+}
 
-function updateUsers() {
-	var usersArr = Object.keys(users)
-	usersArr.sort()
-	$('#users').textContent = usersArr.join("\n")
+function userRemove(nick) {
+	var users = $('#users')
+	var children = users.children
+	for (var i = 0; i < children.length; i++) {
+		var user = children[i]
+		if (user.textContent == nick) {
+			users.removeChild(user)
+		}
+	}
+}
+
+function usersClear() {
+	var users = $('#users')
+	while (users.firstChild) {
+		users.removeChild(users.firstChild)
+	}
+}
+
+function userInvite(e) {
+	var nick = e.target.textContent
+	send({cmd: 'invite', nick: nick})
 }
 
 /* color scheme switcher */
