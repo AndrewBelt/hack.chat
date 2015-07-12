@@ -252,19 +252,38 @@ $('#chatinput').onkeydown = function(e) {
 		}
 		e.preventDefault()
 	}
-	else if (e.keyCode == 38 /* UP */) {
+	else if (e.keyCode == 38 && isInFirstLine(e) /* UP */) {
 		// Restore previous sent message
 		if (e.target.value == '' || lastSentPos > -1) {
 			lastSentPos++
 			updateLastSentInput(e)
 		}
 	}
-	else if(e.keyCode == 40 /* DOWN */) {
+	else if(e.keyCode == 40 && isInLastLine(e) /* DOWN */) {
 		if(lastSentPos >= 0) {
 			lastSentPos--
 			updateLastSentInput(e)
 		}
 	}
+}
+
+function isInFirstLine(e) {
+	var text = e.target.value;
+	var endPos = e.target.selectionEnd;
+
+	if(text.substring(0, endPos).indexOf("\n") === -1)
+		return true;
+	else
+		false;
+}
+function isInLastLine(e) {
+	var text = e.target.value;
+	var startPos = e.target.selectionStart;
+
+	if(text.substring(startPos).indexOf("\n") === -1)
+		return true;
+	else
+		false;
 }
 
 function updateLastSentInput(e) {
