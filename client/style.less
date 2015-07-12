@@ -57,7 +57,7 @@ ul {
 }
 
 .container {
-	width: 600px;
+	max-width: 600px;
 	margin: 0 auto;
 }
 
@@ -119,4 +119,32 @@ ul {
 
 #sidebar-content {
 	width: 170px;
+}
+
+
+@media only screen and (max-width: 600px) {
+	.messages {
+		border: none;
+	}
+	#messages {
+		padding: 0.5em;
+	}
+	.message {
+		padding-bottom: 0.5em;
+	}
+	.nick {
+		margin: 0;
+		float: none;
+		text-align: left;
+		display: inline;
+	}
+	.text {
+		display: inline;
+	}
+	#sidebar {
+		top: 0.5em;
+		bottom: auto;
+		right: 0.5em;
+		border-left: none;
+	}
 }
