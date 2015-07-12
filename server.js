@@ -1,9 +1,9 @@
 var fs = require('fs')
 var ws = require('ws')
-
+var port = app.listen(process.env.PORT || 5000)
 var config = JSON.parse(fs.readFileSync('./config.json'))
 
-var server = new ws.Server({host: config.host, port: config.port})
+var server = new ws.Server({host: config.host, port: port)
 
 server.on('connection', function(socket) {
 	socket.on('message', function(data) {
