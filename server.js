@@ -1,9 +1,13 @@
+/* jshint asi: true */
+/* jshint esnext: true */
+
 var fs = require('fs')
 var ws = require('ws')
 
 var config = JSON.parse(fs.readFileSync('./config.json'))
 
 var server = new ws.Server({host: config.host, port: config.port})
+console.log("Started server on " + config.host + ":" + config.port)
 
 server.on('connection', function(socket) {
 	socket.on('message', function(data) {
@@ -83,8 +87,8 @@ function getAddress(client) {
 // `this` bound to client
 var COMMANDS = {
 	join: function(args) {
-		channel = String(args.channel)
-		nick = String(args.nick)
+		var channel = String(args.channel)
+		var nick = String(args.nick)
 
 		if (POLICE.frisk(getAddress(this), 3)) {
 			send(this, {cmd: 'warn', text: "You cannot join a channel while your IP is being rate-limited. Wait a moment and try again."})
@@ -98,7 +102,7 @@ var COMMANDS = {
 
 		// Process channel name
 		channel = channel.trim()
-		if (channel == '') {
+		if (!channel) {
 			// Must join a non-blank channel
 			return
 		}
@@ -146,18 +150,22 @@ var COMMANDS = {
 	},
 
 	chat: function(args) {
-		text = String(args.text)
+		var text = String(args.text)
 
-		if (!this.channel) return
+		if (!this.channel) {
+			return
+		}
 		// strip newlines from beginning and end
 		text = text.replace(/^\s*\n|^\s+$|\n\s*$/g, '')
 		// replace 3+ newlines with just 2 newlines
 		text = text.replace(/\n{3,}/g, "\n\n")
-		if (text == '') return
+		if (!text) {
+			return
+		}
 
 		var score = 1 + text.length / 83 / 4
 		if (POLICE.frisk(getAddress(this), score)) {
-			send(this, {cmd: 'warn', text: "Your IP is sending too much text. Wait a moment and try again. Here was your message:\n\n" + text})
+			send(this, {cmd: 'warn', text: "Your IP is sending too much text. Wait a moment and try again.\nPress the up arrow key to restore your last message."})
 			return
 		}
 
@@ -168,33 +176,67 @@ var COMMANDS = {
 		broadcast(data, this.channel)
 	},
 
+	invite: function(args) {
+		var nick = String(args.nick)
+		if (!this.channel) {
+			return
+		}
+
+		if (POLICE.frisk(getAddress(this), 2)) {
+			send(this, {cmd: 'warn', text: "Your IP is being rate limited. Please wait a moment before sending another invite."})
+			return
+		}
+
+		var friend
+		for (var client of server.clients) {
+			// Find friend's client
+			if (client.channel == this.channel && client.nick == nick) {
+				friend = client
+				break
+			}
+		}
+		if (!friend) {
+			send(this, {cmd: 'warn', text: "Could not find user in channel"})
+			return
+		}
+		if (friend == this) {
+			// Ignore silently
+			return
+		}
+		var channel = Math.random().toString(36).substr(2, 8)
+		send(this, {cmd: 'info', text: "You invited " + friend.nick + " to ?" + channel})
+		send(friend, {cmd: 'info', text: this.nick + " invited you to ?" + channel})
+	},
+
 	// Admin stuff below this point
 
 	ban: function(args) {
-		channel = String(args.channel)
-		nick = String(args.nick)
+		var channel = args.channel ? String(args.channel) : this.channel
+		var nick = String(args.nick)
 
 		if (!this.admin) {
 			return
 		}
 		if (!channel) {
-			channel = this.channel
+			return
 		}
 
 		var badClient
 		for (var client of server.clients) {
 			if (client.channel == channel && client.nick == nick) {
 				badClient = client
+				break
 			}
 		}
 
 		if (!badClient) {
+			send(this, {cmd: 'warn', text: "Could not find " + nick + " in ?" + channel})
 			return
 		}
 
 		POLICE.arrest(getAddress(badClient))
 		send(badClient, {cmd: 'warn', text: "You have been banned. :("})
-		send(this, {cmd: 'info', text: "Banned " + badClient.nick})
+		send(this, {cmd: 'info', text: "Banned " + nick + " in ?" + channel})
 	},
 
 	listUsers: function() {
@@ -221,7 +263,7 @@ var COMMANDS = {
 	},
 
 	broadcast: function(args) {
-		text = String(args.text)
+		var text = String(args.text)
 		if (!this.admin) {
 			return
 		}
@@ -233,8 +275,8 @@ var COMMANDS = {
 // rate limiter
 var POLICE = {
 	records: {},
-	halflife: 10000, // ms
-	threshold: 10,
+	halflife: 30000, // ms
+	threshold: 15,
 
 	frisk: function(id, deltaScore) {
 		var record = this.records[id]
