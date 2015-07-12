@@ -285,7 +285,6 @@ $('#chatinput').oninput = function() {
 }
 
 updateInputSize()
-$('#chatinput').focus()
 
 
 /* sidebar */
