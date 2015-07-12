@@ -44,7 +44,8 @@ window.onload = function() {
 var ws
 var myNick
 var myChannel
-var lastSent = ""
+var lastSent = []
+var lastSentPos = -1;
 
 function join(channel) {
 	if (document.domain == 'hack.chat') {
@@ -245,20 +246,39 @@ $('#chatinput').onkeydown = function(e) {
 			var text = e.target.value
 			e.target.value = ''
 			send({cmd: 'chat', text: text})
-			lastSent = text
+			lastSent.unshift(text)
+			lastSentPos = -1
 			updateInputSize()
 		}
 		e.preventDefault()
 	}
 	else if (e.keyCode == 38 /* UP */) {
 		// Restore previous sent message
-		if (e.target.value == '') {
-			e.target.value = lastSent
-			e.target.selectionStart = e.target.value.length
-			updateInputSize()
-			e.preventDefault()
+		if (e.target.value == '' || lastSentPos > -1) {
+			lastSentPos++
+			updateLastSentInput(e)
 		}
 	}
+	else if(e.keyCode == 40 /* DOWN */) {
+		if(lastSentPos >= 0) {
+			lastSentPos--
+			updateLastSentInput(e)
+		}
+	}
+}
+
+function updateLastSentInput(e) {
+	if(lastSentPos >= lastSent.length)
+		lastSentPos = lastSent.length -1
+
+	if(lastSentPos < 0)
+		e.target.value = ''
+	else
+		e.target.value = lastSent[lastSentPos]
+
+	e.target.selectionStart = e.target.value.length
+	updateInputSize()
+	e.preventDefault()
 }
 
 function updateInputSize() {
