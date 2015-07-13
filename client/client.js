@@ -152,15 +152,19 @@ function pushMessage(nick, text, time, cls) {
 
 	textEl.textContent = text || ''
 	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
-	try {
-		renderMathInElement(textEl, {delimiters: [
-		  {left: "$$", right: "$$", display: true},
-		  {left: "$", right: "$", display: false},
-		]})
+
+	if($('#parse-latex').checked) {
+		try {
+			renderMathInElement(textEl, {delimiters: [
+			  {left: "$$", right: "$$", display: true},
+			  {left: "$", right: "$", display: false},
+			]})
+		}
+		catch (e) {
+			console.warn(e)
+		}
 	}
-	catch (e) {
-		console.warn(e)
-	}
+
 	messageEl.appendChild(textEl)
 
 	var atBottom = isAtBottom()
