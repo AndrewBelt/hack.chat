@@ -151,7 +151,7 @@ function pushMessage(nick, text, time, cls) {
 	textEl.classList.add('text')
 
 	textEl.textContent = text || ''
-	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
+	textEl.innerHTML = textEl.innerHTML.replace(/( \?|^\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
 
 	if ($('#parse-latex').checked) {
 		// Temporary hotfix for \rule spamming, see https://github.com/Khan/KaTeX/issues/109
@@ -192,16 +192,17 @@ function send(data) {
 }
 
 
-function parseLinks(g0) {
+function parseLinks(g0, match) {
 	var a = document.createElement('a')
-	a.innerHTML = g0
+	a.innerHTML = g0.trim()
 	var url = a.textContent
 	if (url[0] == '?') {
 		url = "/" + url
 	}
 	a.href = url
 	a.target = '_blank'
-	return a.outerHTML
+	if(match == ' ?') return ' ' + a.outerHTML
+	else return a.outerHTML
 }
 
 
