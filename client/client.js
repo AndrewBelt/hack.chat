@@ -94,6 +94,14 @@ var COMMANDS = {
 		else if (myNick == args.nick) {
 			cls = 'me'
 		}
+		else if (myNick != args.nick)
+		{
+			var re = new RegExp(myNick)
+			if(re.test(args.text))
+			{
+				args.text = args.text.replace(myNick, "$\\red{" + myNick + "}$")
+			}
+		}
 		pushMessage(args.nick, args.text, args.time, cls)
 	},
 	info: function(args) {
@@ -398,3 +406,4 @@ if (localStorage) {
 }
 
 $('#scheme-selector').value = currentScheme
+
