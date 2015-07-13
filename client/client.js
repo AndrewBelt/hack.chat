@@ -151,7 +151,7 @@ function pushMessage(nick, text, time, cls) {
 	textEl.classList.add('text')
 
 	textEl.textContent = text || ''
-	textEl.innerHTML = textEl.innerHTML.replace(/(^|[\s\(\[\{\\\/\+-_\.\*\^&%#@])(\?[\S]*|https?:\/\/[\w\d,.!?:%#^\s\s]*)/g, parseLinks)
+	textEl.innerHTML = textEl.innerHTML.replace(/(^|[\s\(\[\{\\\/\+-_\*\^&%#@])(\?[\S]+|https?:\/\/[\S]+\.[\w\d\-_,.!?:%#\/]*)/g, parseLinks)
 
 	if ($('#parse-latex').checked) {
 		// Temporary hotfix for \rule spamming, see https://github.com/Khan/KaTeX/issues/109
