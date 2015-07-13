@@ -151,15 +151,15 @@ function pushMessage(nick, text, time, cls) {
 	textEl.classList.add('text')
 
 	textEl.textContent = text || ''
-	// Temporary hotfix for \rule spamming, see https://github.com/Khan/KaTeX/issues/109
-	textEl.innerHTML = textEl.innerHTML.replace(/\\rule{.*?}{.*?}|\\\\\[.*?\]/g, '')
 	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
 
-	if($('#parse-latex').checked) {
+	if ($('#parse-latex').checked) {
+		// Temporary hotfix for \rule spamming, see https://github.com/Khan/KaTeX/issues/109
+		textEl.innerHTML = textEl.innerHTML.replace(/\\rule|\\\\\s*\[.*?\]/g, '')
 		try {
 			renderMathInElement(textEl, {delimiters: [
-			  {left: "$$", right: "$$", display: true},
-			  {left: "$", right: "$", display: false},
+				{left: "$$", right: "$$", display: true},
+				{left: "$", right: "$", display: false},
 			]})
 		}
 		catch (e) {
