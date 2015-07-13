@@ -155,7 +155,7 @@ function pushMessage(nick, text, time, cls) {
 		charCode = Math.ceil(charCode)
 		var hex = charCode.toString(16)
 		
-		if(hex.length == 1) // 0 - 1 aka 0 - F
+		if(hex.length == 1) // 0 - 16 aka 0 - F
 			hex = "0" + hex
 		color.push(hex)
 	}
