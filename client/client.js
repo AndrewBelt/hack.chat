@@ -372,9 +372,8 @@ var currentScheme = 'atelier-dune'
 function setScheme(scheme) {
 	currentScheme = scheme
 	$('#scheme-link').href = "/schemes/" + scheme + ".css"
-	if (localStorage) {
-		localStorage['scheme'] = scheme
-	}
+	
+	updateStorage('scheme', scheme)
 }
 
 // Add scheme options to dropdown selector
@@ -389,11 +388,33 @@ $('#scheme-selector').onchange = function(e) {
 	setScheme(e.target.value)
 }
 
-// Load and select scheme from local storage if available
+// Load sidebar configaration values from local storage if available
 if (localStorage) {
+	var hideSidebar = localStorage['hideSidebar']
+	if(hideSidebar == 'false') {
+		$('#pin-sidebar').checked = true
+		$('#sidebar-content').classList.remove('hidden')
+	}
+
+	var joinLeftNotify = localStorage['joinedLeftNotify']
+	if(joinLeftNotify) {
+		$('#joined-left').checked = joinLeftNotify == 'true'
+	}
+
+	var parseLatex = localStorage['parseLatex']
+	if(parseLatex) {
+		$('#parse-latex').checked = parseLatex == 'true'
+	}
+
 	var scheme = localStorage['scheme']
 	if (scheme) {
 		setScheme(scheme)
+	}
+}
+
+function updateStorage(name, value) {
+	if(localStorage) {
+		localStorage[name] = value
 	}
 }
 
