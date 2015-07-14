@@ -330,7 +330,6 @@ $('#clear-history').onclick = function() {
 if (localStorageGet('pin-sidebar') == 'true') {
 	$('#pin-sidebar').checked = true
 	$('#sidebar-content').classList.remove('hidden')
-	console.log('hi')
 }
 if (localStorageGet('joined-left') == 'false') {
 	$('#joined-left').checked = false
