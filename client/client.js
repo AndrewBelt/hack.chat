@@ -134,9 +134,37 @@ function pushMessage(nick, text, time, cls) {
 		messageEl.classList.add(cls)
 	}
 
+	var color = []
+	var charsRequired = 3
+	for(var i = 0; i < charsRequired; i++) {
+		var charCode = nick.charCodeAt(i) || 77
+
+		if(charCode <= 91 && charCode >= 65) { //is upper case
+			charCode -= 65
+		}
+		else if(charCode <= 122 && charCode >= 97) { //is lower case
+			charCode -= 97
+		}
+		else { //is other char
+			charsRequired++;
+			continue;
+		}
+
+		//set color value based on what letter of the alphabet charCode represents
+		charCode *= 255 / 26
+		charCode = Math.ceil(charCode)
+		var hex = charCode.toString(16)
+		
+		if(hex.length == 1) // 0 - 1 aka 0 - F
+			hex = "0" + hex
+		color.push(hex)
+	}
+	color = "#" + color.join("")
+
 	var nickEl = document.createElement('span')
 	nickEl.classList.add('nick')
 	nickEl.textContent = nick || ''
+	nickEl.style.color = color;
 	if (time) {
 		var date = new Date(time)
 		nickEl.title = date.toLocaleString()
