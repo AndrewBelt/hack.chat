@@ -27,6 +27,18 @@ var frontpage = [
 
 function $(query) {return document.querySelector(query)}
 
+function localStorageGet(key) {
+	if (localStorage) {
+		return localStorage[key]
+	}
+}
+
+function localStorageSet(key, val) {
+	if (localStorage) {
+		localStorage[key] = val
+	}
+}
+
 
 window.onload = function() {
 	myChannel = window.location.search.replace(/^\?/, '')
@@ -313,6 +325,32 @@ $('#clear-history').onclick = function() {
 	}
 }
 
+// Restore settings from localStorage
+
+if (localStorageGet('pin-sidebar') == 'true') {
+	$('#pin-sidebar').checked = true
+	$('#sidebar-content').classList.remove('hidden')
+	console.log('hi')
+}
+if (localStorageGet('joined-left') == 'false') {
+	$('#joined-left').checked = false
+}
+if (localStorageGet('parse-latex') == 'false') {
+	$('#parse-latex').checked = false
+}
+
+$('#pin-sidebar').onchange = function(e) {
+	localStorageSet('pin-sidebar', !!e.target.checked)
+}
+$('#joined-left').onchange = function(e) {
+	localStorageSet('joined-left', !!e.target.checked)
+}
+$('#parse-latex').onchange = function(e) {
+	localStorageSet('parse-latex', !!e.target.checked)
+}
+
+// User list
+
 function userAdd(nick) {
 	var user = document.createElement('li')
 	user.textContent = nick
@@ -372,8 +410,7 @@ var currentScheme = 'atelier-dune'
 function setScheme(scheme) {
 	currentScheme = scheme
 	$('#scheme-link').href = "/schemes/" + scheme + ".css"
-	
-	updateStorage('scheme', scheme)
+	localStorageSet('scheme', scheme)
 }
 
 // Add scheme options to dropdown selector
@@ -389,33 +426,8 @@ $('#scheme-selector').onchange = function(e) {
 }
 
 // Load sidebar configaration values from local storage if available
-if (localStorage) {
-	var hideSidebar = localStorage['hideSidebar']
-	if(hideSidebar == 'false') {
-		$('#pin-sidebar').checked = true
-		$('#sidebar-content').classList.remove('hidden')
-	}
-
-	var joinLeftNotify = localStorage['joinedLeftNotify']
-	if(joinLeftNotify) {
-		$('#joined-left').checked = joinLeftNotify == 'true'
-	}
-
-	var parseLatex = localStorage['parseLatex']
-	if(parseLatex) {
-		$('#parse-latex').checked = parseLatex == 'true'
-	}
-
-	var scheme = localStorage['scheme']
-	if (scheme) {
-		setScheme(scheme)
-	}
-}
-
-function updateStorage(name, value) {
-	if(localStorage) {
-		localStorage[name] = value
-	}
+if (localStorageGet('scheme')) {
+	setScheme(localStorageGet('scheme'))
 }
 
 $('#scheme-selector').value = currentScheme

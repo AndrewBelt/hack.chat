@@ -21,14 +21,14 @@ html
 		nav#sidebar
 			#sidebar-content.hidden
 				p
-					input#pin-sidebar(type="checkbox", onchange="updateStorage('hideSidebar', !this.checked)")
+					input#pin-sidebar(type="checkbox")
 					label(for="pin-sidebar") Pin sidebar
 				h4 Settings
 				p
-					input#joined-left(type="checkbox", checked, onchange="updateStorage('joinedLeftNotify', this.checked)")
+					input#joined-left(type="checkbox", checked)
 					label(for="joined-left") Join/left notify
 				p
-					input#parse-latex(type="checkbox", checked, onchange="updateStorage('parseLatex', this.checked)")
+					input#parse-latex(type="checkbox", checked)
 					label(for="parse-latex") Parse LaTeX
 				p
 					button#clear-history Clear history
