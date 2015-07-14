@@ -40,22 +40,9 @@ function localStorageSet(key, val) {
 }
 
 
-window.onload = function() {
-	myChannel = window.location.search.replace(/^\?/, '')
-	if (myChannel == '') {
-		pushMessage('', frontpage)
-		$('#footer').classList.add('hidden')
-		$('#sidebar').classList.add('hidden')
-	}
-	else {
-		join(myChannel)
-	}
-}
-
-
 var ws
-var myNick
-var myChannel
+var myNick = localStorageGet('my-nick')
+var myChannel = window.location.search.replace(/^\?/, '')
 var lastSent = ""
 
 function join(channel) {
@@ -69,14 +56,16 @@ function join(channel) {
 	}
 
 	var wasConnected = false
+
 	ws.onopen = function() {
-		wasConnected = true
-		if (!myNick) {
-			myNick = prompt('Nickname:')
+		if (!wasConnected) {
+			myNick = prompt('Nickname:', myNick)
 		}
 		if (myNick) {
+			localStorageSet('my-nick', myNick)
 			send({cmd: 'join', channel: channel, nick: myNick})
 		}
+		wasConnected = true
 	}
 
 	ws.onclose = function() {
@@ -438,3 +427,15 @@ if (localStorageGet('scheme')) {
 }
 
 $('#scheme-selector').value = currentScheme
+
+
+/* main */
+
+if (myChannel == '') {
+	pushMessage('', frontpage)
+	$('#footer').classList.add('hidden')
+	$('#sidebar').classList.add('hidden')
+}
+else {
+	join(myChannel)
+}
