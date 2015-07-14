@@ -140,14 +140,15 @@ var COMMANDS = {
 
 
 function pushMessage(nick, text, time, cls) {
+	// Message container
 	var messageEl = document.createElement('div')
 	messageEl.classList.add('message')
 	if (cls) {
 		messageEl.classList.add(cls)
 	}
 
-	var nickEl = document.createElement('span')
-	nickEl.classList.add('nick')
+	// Nickname
+	var nickEl = document.createElement('a')
 	nickEl.textContent = nick || ''
 	if (time) {
 		var date = new Date(time)
@@ -157,8 +158,12 @@ function pushMessage(nick, text, time, cls) {
 		insertAtCursor("@" + nick + " ")
 		$('#chatinput').focus()
 	}
-	messageEl.appendChild(nickEl)
+	var nickSpanEl = document.createElement('span')
+	nickSpanEl.classList.add('nick')
+	nickSpanEl.appendChild(nickEl)
+	messageEl.appendChild(nickSpanEl)
 
+	// Text
 	var textEl = document.createElement('pre')
 	textEl.classList.add('text')
 
@@ -181,6 +186,7 @@ function pushMessage(nick, text, time, cls) {
 
 	messageEl.appendChild(textEl)
 
+	// Scroll to bottom
 	var atBottom = isAtBottom()
 	$('#messages').appendChild(messageEl)
 	if (atBottom) {
@@ -351,10 +357,12 @@ $('#parse-latex').onchange = function(e) {
 // User list
 
 function userAdd(nick) {
-	var user = document.createElement('li')
+	var user = document.createElement('a')
 	user.textContent = nick
 	user.onclick = userInvite
-	$('#users').appendChild(user)
+	var userLi = document.createElement('li')
+	userLi.appendChild(user)
+	$('#users').appendChild(userLi)
 }
 
 function userRemove(nick) {
