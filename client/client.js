@@ -127,6 +127,7 @@ var COMMANDS = {
 	onlineRemove: function(args) {
 		var nick = args.nick
 		userRemove(nick)
+		userUnignore(nick)
 		if ($('#joined-left').checked) {
 			pushMessage('*', nick + " left", Date.now(), 'info')
 		}
@@ -376,6 +377,10 @@ function userAdd(nick) {
 	$('#users').appendChild(userLi)
 }
 
+function userUnignore(nick) {
+	myIgnores.splice(myIgnores.indexOf(nick), 1)
+}
+
 function userIgnore(me, nick) {
 	var index = myIgnores.indexOf(nick)
 	if (index == -1) {
@@ -392,7 +397,7 @@ function userRemove(nick) {
 	var children = users.children
 	for (var i = 0; i < children.length; i++) {
 		var user = children[i]
-		if (user.textContent == nick) {
+		if (user.children[0].textContent == nick) {
 			users.removeChild(user)
 		}
 	}
