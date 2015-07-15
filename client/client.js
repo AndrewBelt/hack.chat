@@ -43,10 +43,14 @@ function localStorageSet(key, val) {
 var ws
 var myNick = localStorageGet('my-nick')
 var myChannel = window.location.search.replace(/^\?/, '')
+var myIgnores = []
 var lastSent = ""
 
+var ignoreTitle = ['Ignore this user', 'Accept messages from this user']
+var ignoreLabel = ['I', 'A']
+
 function join(channel) {
-	if (document.domain == 'hack.chat') {
+	if (document.domain == 'hack.chat' || true) {
 		// For https://hack.chat/
 		ws = new WebSocket('wss://hack.chat/chat-ws')
 	}
@@ -95,7 +99,9 @@ var COMMANDS = {
 		else if (myNick == args.nick) {
 			cls = 'me'
 		}
-		pushMessage(args.nick, args.text, args.time, cls)
+		if (myIgnores.indexOf(args.nick) == -1) {
+			pushMessage(args.nick, args.text, args.time, cls)
+		}
 	},
 	info: function(args) {
 		pushMessage('*', args.text, args.time, 'info')
@@ -345,13 +351,40 @@ $('#parse-latex').onchange = function(e) {
 
 // User list
 
+function getIgnoreLabel(nick) {
+	return myIgnores.indexOf(nick)==-1 ? ignoreLabel[0] : ignoreLabel[1];
+}
+
+function getIgnoreTitle(nick) {
+	return myIgnores.indexOf(nick)==-1 ? ignoreTitle[0] : ignoreTitle[1];
+}
+
 function userAdd(nick) {
 	var user = document.createElement('a')
 	user.textContent = nick
 	user.onclick = userInvite
+
+	var ignore = document.createElement('a')
+	ignore.textContent = getIgnoreLabel(nick)
+	ignore.title = getIgnoreTitle(nick)
+	ignore.style.float = 'right'
+	ignore.onclick = function() { userIgnore(ignore, nick); }
+
 	var userLi = document.createElement('li')
 	userLi.appendChild(user)
+	userLi.appendChild(ignore)
 	$('#users').appendChild(userLi)
+}
+
+function userIgnore(me, nick) {
+	var index = myIgnores.indexOf(nick)
+	if (index == -1) {
+		myIgnores.push(nick)
+	} else {
+		myIgnores.splice(index, 1)
+	}
+	me.textContent = getIgnoreLabel(nick);
+	me.title = getIgnoreTitle(nick);
 }
 
 function userRemove(nick) {
