@@ -50,7 +50,7 @@ var ignoreTitle = ['Ignore this user', 'Accept messages from this user']
 var ignoreLabel = ['I', 'A']
 
 function join(channel) {
-	if (document.domain == 'hack.chat' || true) {
+	if (document.domain == 'hack.chat') {
 		// For https://hack.chat/
 		ws = new WebSocket('wss://hack.chat/chat-ws')
 	}
