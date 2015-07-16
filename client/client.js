@@ -286,6 +286,11 @@ $('#chatinput').onkeydown = function(e) {
 			e.preventDefault()
 		}
 	}
+	else if (e.keyCode == 27 /* ESC */) {
+		// Clear input field
+		e.target.value = ''
+		updateInputSize()
+	}
 }
 
 function updateInputSize() {
