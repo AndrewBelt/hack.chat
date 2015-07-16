@@ -27,25 +27,30 @@ var frontpage = [
 
 function $(query) {return document.querySelector(query)}
 
-
-window.onload = function() {
-	myChannel = window.location.search.replace(/^\?/, '')
-	if (myChannel == '') {
-		pushMessage('', frontpage)
-		$('#footer').classList.add('hidden')
-		$('#sidebar').classList.add('hidden')
+function localStorageGet(key) {
+	if (localStorage) {
+		return localStorage[key]
 	}
-	else {
-		join(myChannel)
+}
+
+function localStorageSet(key, val) {
+	if (localStorage) {
+		localStorage[key] = val
 	}
 }
 
 
 var ws
-var myNick
-var myChannel
+var myNick = localStorageGet('my-nick')
+var myChannel = window.location.search.replace(/^\?/, '')
 var lastSent = []
 var lastSentPos = -1;
+
+// Ping server every 50 seconds to retain WebSocket connection
+window.setInterval(function() {
+	send({cmd: 'ping'})
+}, 50000)
+
 
 function join(channel) {
 	if (document.domain == 'hack.chat') {
@@ -58,14 +63,16 @@ function join(channel) {
 	}
 
 	var wasConnected = false
+
 	ws.onopen = function() {
-		wasConnected = true
-		if (!myNick) {
-			myNick = prompt('Nickname:')
+		if (!wasConnected) {
+			myNick = prompt('Nickname:', myNick)
 		}
 		if (myNick) {
+			localStorageSet('my-nick', myNick)
 			send({cmd: 'join', channel: channel, nick: myNick})
 		}
+		wasConnected = true
 	}
 
 	ws.onclose = function() {
@@ -129,14 +136,15 @@ var COMMANDS = {
 
 
 function pushMessage(nick, text, time, cls) {
+	// Message container
 	var messageEl = document.createElement('div')
 	messageEl.classList.add('message')
 	if (cls) {
 		messageEl.classList.add(cls)
 	}
 
-	var nickEl = document.createElement('span')
-	nickEl.classList.add('nick')
+	// Nickname
+	var nickEl = document.createElement('a')
 	nickEl.textContent = nick || ''
 	if (time) {
 		var date = new Date(time)
@@ -146,24 +154,35 @@ function pushMessage(nick, text, time, cls) {
 		insertAtCursor("@" + nick + " ")
 		$('#chatinput').focus()
 	}
-	messageEl.appendChild(nickEl)
+	var nickSpanEl = document.createElement('span')
+	nickSpanEl.classList.add('nick')
+	nickSpanEl.appendChild(nickEl)
+	messageEl.appendChild(nickSpanEl)
 
+	// Text
 	var textEl = document.createElement('pre')
 	textEl.classList.add('text')
 
 	textEl.textContent = text || ''
 	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
-	try {
-		renderMathInElement(textEl, {delimiters: [
-		  {left: "$$", right: "$$", display: true},
-		  {left: "$", right: "$", display: false},
-		]})
+
+	if ($('#parse-latex').checked) {
+		// Temporary hotfix for \rule spamming, see https://github.com/Khan/KaTeX/issues/109
+		textEl.innerHTML = textEl.innerHTML.replace(/\\rule|\\\\\s*\[.*?\]/g, '')
+		try {
+			renderMathInElement(textEl, {delimiters: [
+				{left: "$$", right: "$$", display: true},
+				{left: "$", right: "$", display: false},
+			]})
+		}
+		catch (e) {
+			console.warn(e)
+		}
 	}
-	catch (e) {
-		console.warn(e)
-	}
+
 	messageEl.appendChild(textEl)
 
+	// Scroll to bottom
 	var atBottom = isAtBottom()
 	$('#messages').appendChild(messageEl)
 	if (atBottom) {
@@ -183,7 +202,9 @@ function insertAtCursor(text) {
 
 
 function send(data) {
-	ws.send(JSON.stringify(data))
+	if (ws && ws.readyState == ws.OPEN) {
+		ws.send(JSON.stringify(data))
+	}
 }
 
 
@@ -328,11 +349,12 @@ updateInputSize()
 
 /* sidebar */
 
-$('#sidebar').onmouseenter = function() {
+$('#sidebar').onmouseenter = $('#sidebar').ontouchstart = function(e) {
 	$('#sidebar-content').classList.remove('hidden')
+	e.stopPropagation()
 }
 
-$('#sidebar').onmouseleave = function() {
+$('#sidebar').onmouseleave = document.ontouchstart = function() {
 	if (!$('#pin-sidebar').checked) {
 		$('#sidebar-content').classList.add('hidden')
 	}
@@ -346,11 +368,38 @@ $('#clear-history').onclick = function() {
 	}
 }
 
+// Restore settings from localStorage
+
+if (localStorageGet('pin-sidebar') == 'true') {
+	$('#pin-sidebar').checked = true
+	$('#sidebar-content').classList.remove('hidden')
+}
+if (localStorageGet('joined-left') == 'false') {
+	$('#joined-left').checked = false
+}
+if (localStorageGet('parse-latex') == 'false') {
+	$('#parse-latex').checked = false
+}
+
+$('#pin-sidebar').onchange = function(e) {
+	localStorageSet('pin-sidebar', !!e.target.checked)
+}
+$('#joined-left').onchange = function(e) {
+	localStorageSet('joined-left', !!e.target.checked)
+}
+$('#parse-latex').onchange = function(e) {
+	localStorageSet('parse-latex', !!e.target.checked)
+}
+
+// User list
+
 function userAdd(nick) {
-	var user = document.createElement('li')
+	var user = document.createElement('a')
 	user.textContent = nick
 	user.onclick = userInvite
-	$('#users').appendChild(user)
+	var userLi = document.createElement('li')
+	userLi.appendChild(user)
+	$('#users').appendChild(userLi)
 }
 
 function userRemove(nick) {
@@ -405,9 +454,7 @@ var currentScheme = 'atelier-dune'
 function setScheme(scheme) {
 	currentScheme = scheme
 	$('#scheme-link').href = "/schemes/" + scheme + ".css"
-	if (localStorage) {
-		localStorage['scheme'] = scheme
-	}
+	localStorageSet('scheme', scheme)
 }
 
 // Add scheme options to dropdown selector
@@ -422,12 +469,21 @@ $('#scheme-selector').onchange = function(e) {
 	setScheme(e.target.value)
 }
 
-// Load and select scheme from local storage if available
-if (localStorage) {
-	var scheme = localStorage['scheme']
-	if (scheme) {
-		setScheme(scheme)
-	}
+// Load sidebar configaration values from local storage if available
+if (localStorageGet('scheme')) {
+	setScheme(localStorageGet('scheme'))
 }
 
 $('#scheme-selector').value = currentScheme
+
+
+/* main */
+
+if (myChannel == '') {
+	pushMessage('', frontpage)
+	$('#footer').classList.add('hidden')
+	$('#sidebar').classList.add('hidden')
+}
+else {
+	join(myChannel)
+}
