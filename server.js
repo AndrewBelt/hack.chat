@@ -104,6 +104,7 @@ var COMMANDS = {
 
 		if (POLICE.frisk(getAddress(this), 3)) {
 			send({cmd: 'warn', text: "You are joining channels too fast. Wait a moment and try again."}, this)
+			this.close()
 			return
 		}
 
@@ -123,6 +124,7 @@ var COMMANDS = {
 		nick = nick.trim()
 		if (nick.toLowerCase() == config.admin.toLowerCase()) {
 			send({cmd: 'warn', text: "Cannot impersonate the admin"}, this)
+			this.close()
 			return
 		}
 		if (nick == config.password) {
@@ -131,6 +133,7 @@ var COMMANDS = {
 		}
 		if (!nicknameValid(nick)) {
 			send({cmd: 'warn', text: "Nickname invalid"}, this)
+			this.close()
 			return
 		}
 
@@ -139,6 +142,7 @@ var COMMANDS = {
 			if (client.channel === channel) {
 				if (client.nick.toLowerCase() === nick.toLowerCase()) {
 					send({cmd: 'warn', text: "Nickname taken"}, this)
+					this.close()
 					return
 				}
 			}
