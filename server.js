@@ -12,6 +12,14 @@ console.log("Started server on " + config.host + ":" + config.port)
 server.on('connection', function(socket) {
 	socket.on('message', function(data) {
 		try {
+			// Don't penalize yet, but check whether IP is rate-limited
+			if (POLICE.frisk(getAddress(socket), 0)) {
+				send({cmd: 'warn', text: "Your IP is being rate-limited."}, socket)
+				return
+			}
+			// Penalize here, but don't do anything about it
+			POLICE.frisk(getAddress(socket), 1)
+
 			// ignore ridiculously large packets
 			if (data.length > 65536) {
 				return
@@ -40,7 +48,7 @@ server.on('connection', function(socket) {
 	})
 })
 
-function send(client, data) {
+function send(data, client) {
 	// Add timestamp to command
 	data.time = Date.now()
 	try {
@@ -59,7 +67,7 @@ channel: if not null, restricts broadcast to clients in the channel
 function broadcast(data, channel) {
 	for (var client of server.clients) {
 		if (channel ? client.channel === channel : client.channel) {
-			send(client, data)
+			send(data, client)
 		}
 	}
 }
@@ -91,7 +99,7 @@ var COMMANDS = {
 		var nick = String(args.nick)
 
 		if (POLICE.frisk(getAddress(this), 3)) {
-			send(this, {cmd: 'warn', text: "You cannot join a channel while your IP is being rate-limited. Wait a moment and try again."})
+			send({cmd: 'warn', text: "You are joining channels too fast. Wait a moment and try again."}, this)
 			return
 		}
 
@@ -110,7 +118,7 @@ var COMMANDS = {
 		// Process nickname
 		nick = nick.trim()
 		if (nick.toLowerCase() == config.admin.toLowerCase()) {
-			send(this, {cmd: 'warn', text: "Cannot impersonate the admin"})
+			send({cmd: 'warn', text: "Cannot impersonate the admin"}, this)
 			return
 		}
 		if (nick == config.password) {
@@ -118,7 +126,7 @@ var COMMANDS = {
 			this.admin = true
 		}
 		if (!nicknameValid(nick)) {
-			send(this, {cmd: 'warn', text: "Nickname invalid"})
+			send({cmd: 'warn', text: "Nickname invalid"}, this)
 			return
 		}
 
@@ -126,7 +134,7 @@ var COMMANDS = {
 		for (var client of server.clients) {
 			if (client.channel === channel) {
 				if (client.nick.toLowerCase() === nick.toLowerCase()) {
-					send(this, {cmd: 'warn', text: "Nickname taken"})
+					send({cmd: 'warn', text: "Nickname taken"}, this)
 					return
 				}
 			}
@@ -146,7 +154,7 @@ var COMMANDS = {
 				nicks.push(client.nick)
 			}
 		}
-		send(this, {cmd: 'onlineSet', nicks: nicks})
+		send({cmd: 'onlineSet', nicks: nicks}, this)
 	},
 
 	chat: function(args) {
@@ -163,9 +171,9 @@ var COMMANDS = {
 			return
 		}
 
-		var score = 1 + text.length / 83 / 4
+		var score = text.length / 83 / 4
 		if (POLICE.frisk(getAddress(this), score)) {
-			send(this, {cmd: 'warn', text: "Your IP is sending too much text. Wait a moment and try again.\nPress the up arrow key to restore your last message."})
+			send({cmd: 'warn', text: "You are sending too much text. Wait a moment and try again.\nPress the up arrow key to restore your last message."}, this)
 			return
 		}
 
@@ -183,7 +191,7 @@ var COMMANDS = {
 		}
 
 		if (POLICE.frisk(getAddress(this), 2)) {
-			send(this, {cmd: 'warn', text: "Your IP is being rate limited. Please wait a moment before sending another invite."})
+			send({cmd: 'warn', text: "You are sending invites too fast. Wait a moment before trying again."}, this)
 			return
 		}
 
@@ -196,7 +204,7 @@ var COMMANDS = {
 			}
 		}
 		if (!friend) {
-			send(this, {cmd: 'warn', text: "Could not find user in channel"})
+			send({cmd: 'warn', text: "Could not find user in channel"}, this)
 			return
 		}
 		if (friend == this) {
@@ -204,8 +212,8 @@ var COMMANDS = {
 			return
 		}
 		var channel = Math.random().toString(36).substr(2, 8)
-		send(this, {cmd: 'info', text: "You invited " + friend.nick + " to ?" + channel})
-		send(friend, {cmd: 'info', text: this.nick + " invited you to ?" + channel})
+		send({cmd: 'info', text: "You invited " + friend.nick + " to ?" + channel}, this)
+		send({cmd: 'info', text: this.nick + " invited you to ?" + channel}, friend)
 	},
 
 	// Admin stuff below this point
@@ -230,13 +238,13 @@ var COMMANDS = {
 		}
 
 		if (!badClient) {
-			send(this, {cmd: 'warn', text: "Could not find " + nick + " in ?" + channel})
+			send({cmd: 'warn', text: "Could not find " + nick + " in ?" + channel}, this)
 			return
 		}
 
 		POLICE.arrest(getAddress(badClient))
-		send(badClient, {cmd: 'warn', text: "You have been banned. :("})
-		send(this, {cmd: 'info', text: "Banned " + nick + " in ?" + channel})
+		send({cmd: 'warn', text: "You have been banned. :("}, badClient)
+		send({cmd: 'info', text: "Banned " + nick + " in ?" + channel}, this)
 	},
 
 	listUsers: function() {
@@ -259,7 +267,7 @@ var COMMANDS = {
 		}
 		var text = server.clients.length + " users online:\n\n"
 		text += lines.join("\n")
-		send(this, {cmd: 'info', text: text})
+		send({cmd: 'info', text: text}, this)
 	},
 
 	broadcast: function(args) {
