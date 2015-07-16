@@ -361,6 +361,9 @@ $('#sidebar').onmouseleave = document.ontouchstart = function() {
 }
 
 $('#clear-history').onclick = function() {
+	// clear lastSent history
+	lastSent = []
+	lastSentPos = -1
 	// Delete children elements
 	var messages = $('#messages')
 	while (messages.firstChild) {
