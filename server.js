@@ -94,6 +94,10 @@ function getAddress(client) {
 
 // `this` bound to client
 var COMMANDS = {
+	ping: function() {
+		// Don't do anything
+	},
+
 	join: function(args) {
 		var channel = String(args.channel)
 		var nick = String(args.nick)

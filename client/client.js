@@ -45,6 +45,12 @@ var myNick = localStorageGet('my-nick')
 var myChannel = window.location.search.replace(/^\?/, '')
 var lastSent = ""
 
+// Ping server every 50 seconds to retain WebSocket connection
+window.setInterval(function() {
+	send({cmd: 'ping'})
+}, 50000)
+
+
 function join(channel) {
 	if (document.domain == 'hack.chat') {
 		// For https://hack.chat/
@@ -195,7 +201,9 @@ function insertAtCursor(text) {
 
 
 function send(data) {
-	ws.send(JSON.stringify(data))
+	if (ws && ws.readyState == ws.OPEN) {
+		ws.send(JSON.stringify(data))
+	}
 }
 
 
