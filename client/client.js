@@ -310,11 +310,12 @@ updateInputSize()
 
 /* sidebar */
 
-$('#sidebar').onmouseenter = function() {
+$('#sidebar').onmouseenter = $('#sidebar').ontouchstart = function(e) {
 	$('#sidebar-content').classList.remove('hidden')
+	e.stopPropagation()
 }
 
-$('#sidebar').onmouseleave = function() {
+$('#sidebar').onmouseleave = document.ontouchstart = function() {
 	if (!$('#pin-sidebar').checked) {
 		$('#sidebar-content').classList.add('hidden')
 	}
