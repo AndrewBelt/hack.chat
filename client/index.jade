@@ -23,6 +23,16 @@ html
 				p
 					input#pin-sidebar(type="checkbox")
 					label(for="pin-sidebar") Pin sidebar
+				h4 Notifications
+				p
+					input#notifications-mention(type="checkbox" onchange="updateNotifications(this)")
+					label(for="parse-latex") When @mentioned
+				p
+					input#notifications-chat(type="checkbox" onchange="updateNotifications(this)")
+					label(for="parse-latex") When chat received
+				p
+					input#notifications-joinLeave(type="checkbox" onchange="updateNotifications(this)")
+					label(for="parse-latex") When users join/leave
 				h4 Settings
 				p
 					input#joined-left(type="checkbox", checked)
