@@ -396,7 +396,7 @@ function updateNotifications(e)
 			}
 		});
 	}
-	else if (e.checked) {
+	else if (e.checked && window.Notification) {
 		localStorageSet(e.id, true)
 	}
 	else {
