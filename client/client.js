@@ -270,6 +270,7 @@ $('#footer').onclick = function() {
 
 $('#chatinput').onkeydown = function(e) {
 	if (e.keyCode == 13 /* ENTER */ && !e.shiftKey) {
+		// Submit message
 		if (e.target.value != '') {
 			var text = e.target.value
 			e.target.value = ''
@@ -283,7 +284,7 @@ $('#chatinput').onkeydown = function(e) {
 		// Restore previous sent message
 		if (e.target.value == '') {
 			e.target.value = lastSent
-			e.target.selectionStart = e.target.value.length
+			e.target.selectionStart = e.target.selectionEnd = e.target.value.length
 			updateInputSize()
 			e.preventDefault()
 		}
@@ -292,6 +293,27 @@ $('#chatinput').onkeydown = function(e) {
 		// Clear input field
 		e.target.value = ''
 		updateInputSize()
+	}
+	else if (e.keyCode == 9 /* TAB */) {
+		// Tab complete nicknames starting with @
+		e.preventDefault()
+		var pos = e.target.selectionStart || 0
+		var text = e.target.value
+		var index = text.lastIndexOf('@', pos)
+		if (index >= 0) {
+			var before = text.substr(0, index)
+			var stub = text.substr(index + 1, pos - index - 1)
+			var after = text.substr(pos)
+			// Search for nick beginning with stub
+			var nicks = users.filter(function(nick) {
+				return nick.indexOf(stub) == 0
+			})
+			if (nicks.length == 1) {
+				e.target.value = before + '@' + nicks[0] + after
+				e.target.selectionStart = e.target.selectionEnd = before.length + 1 + nicks[0].length
+				updateInputSize()
+			}
+		}
 	}
 }
 
@@ -361,6 +383,8 @@ $('#parse-latex').onchange = function(e) {
 
 // User list
 
+var users = []
+
 function userAdd(nick) {
 	var user = document.createElement('a')
 	user.textContent = nick
@@ -368,6 +392,7 @@ function userAdd(nick) {
 	var userLi = document.createElement('li')
 	userLi.appendChild(user)
 	$('#users').appendChild(userLi)
+	users.push(nick)
 }
 
 function userRemove(nick) {
@@ -379,6 +404,10 @@ function userRemove(nick) {
 			users.removeChild(user)
 		}
 	}
+	var index = users.indexOf(nick)
+	if (index >= 0) {
+		users.splice(index, 1)
+	}
 }
 
 function usersClear() {
@@ -386,6 +415,7 @@ function usersClear() {
 	while (users.firstChild) {
 		users.removeChild(users.firstChild)
 	}
+	users.length = 0
 }
 
 function userInvite(e) {
