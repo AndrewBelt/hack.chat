@@ -241,6 +241,7 @@ $('#footer').onclick = function() {
 
 $('#chatinput').onkeydown = function(e) {
 	if (e.keyCode == 13 /* ENTER */ && !e.shiftKey) {
+		// Submit message
 		if (e.target.value != '') {
 			var text = e.target.value
 			e.target.value = ''
@@ -254,26 +255,31 @@ $('#chatinput').onkeydown = function(e) {
 		// Restore previous sent message
 		if (e.target.value == '') {
 			e.target.value = lastSent
-			e.target.selectionStart = e.target.value.length
+			e.target.selectionStart = e.target.selectionEnd = e.target.value.length
 			updateInputSize()
 			e.preventDefault()
 		}
 	}
-	else if (e.keyCode == 9) {
-		// Tab completion
-		var contents = e.target.value
-		var parts = contents.split('@')
-		var stub = parts.pop()
-		e.stopPropagation() // don't change focus
+	else if (e.keyCode == 9 /* TAB */) {
+		// Tab complete nicknames starting with @
 		e.preventDefault()
-		// select nicks starting with our stub
-		var matches = Object.keys(users).filter(function (nick) {
-			return nick.indexOf(stub) == 0 
-		})
-		if (matches.length == 1) {
-			e.target.value = parts.join('@') + '@' + matches[0] + ' '
+		var pos = e.target.selectionStart || 0
+		var text = e.target.value
+		var index = text.lastIndexOf('@', pos)
+		if (index >= 0) {
+			var before = text.substr(0, index)
+			var stub = text.substr(index + 1, pos - index - 1)
+			var after = text.substr(pos)
+			// Search for nick beginning with stub
+			var nicks = Object.keys(users).filter(function(nick) {
+				return nick.indexOf(stub) == 0
+			})
+			if (nicks.length == 1) {
+				e.target.value = before + '@' + nicks[0] + after
+				e.target.selectionStart = e.target.selectionEnd = before.length + 1 + nicks[0].length
+				updateInputSize()
+			}
 		}
-		updateInputSize()
 	}
 }
 
