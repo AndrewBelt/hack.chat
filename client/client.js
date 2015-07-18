@@ -305,7 +305,7 @@ $('#chatinput').onkeydown = function(e) {
 			var stub = text.substr(index + 1, pos - index - 1)
 			var after = text.substr(pos)
 			// Search for nick beginning with stub
-			var nicks = users.filter(function(nick) {
+			var nicks = online.filter(function(nick) {
 				return nick.indexOf(stub) == 0
 			})
 			if (nicks.length == 1) {
@@ -383,7 +383,7 @@ $('#parse-latex').onchange = function(e) {
 
 // User list
 
-var users = []
+var online = []
 
 function userAdd(nick) {
 	var user = document.createElement('a')
@@ -392,7 +392,7 @@ function userAdd(nick) {
 	var userLi = document.createElement('li')
 	userLi.appendChild(user)
 	$('#users').appendChild(userLi)
-	users.push(nick)
+	online.push(nick)
 }
 
 function userRemove(nick) {
@@ -404,9 +404,9 @@ function userRemove(nick) {
 			users.removeChild(user)
 		}
 	}
-	var index = users.indexOf(nick)
+	var index = online.indexOf(nick)
 	if (index >= 0) {
-		users.splice(index, 1)
+		online.splice(index, 1)
 	}
 }
 
@@ -415,7 +415,7 @@ function usersClear() {
 	while (users.firstChild) {
 		users.removeChild(users.firstChild)
 	}
-	users.length = 0
+	online.length = 0
 }
 
 function userInvite(e) {
