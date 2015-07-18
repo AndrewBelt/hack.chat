@@ -46,6 +46,7 @@ var ws
 var myNick = localStorageGet('my-nick')
 var myChannel = window.location.search.replace(/^\?/, '')
 var lastSent = ""
+var wasConnected = false
 
 // Ping server every 50 seconds to retain WebSocket connection
 window.setInterval(function() {
@@ -63,8 +64,6 @@ function join(channel) {
 		ws = new WebSocket('ws://' + document.domain + ':6060')
 	}
 
-	var wasConnected = false
-
 	ws.onopen = function() {
 		if (!wasConnected) {
 			myNick = prompt('Nickname:', myNick)
@@ -73,16 +72,15 @@ function join(channel) {
 			localStorageSet('my-nick', myNick)
 			send({cmd: 'join', channel: channel, nick: myNick})
 		}
-		wasConnected = true
 	}
 
 	ws.onclose = function() {
 		if (wasConnected) {
 			pushMessage('!', "Server disconnected. Attempting to reconnect...", Date.now(), 'warn')
+			window.setTimeout(function() {
+				join(channel)
+			}, 2000)
 		}
-		window.setTimeout(function() {
-			join(channel)
-		}, 2000)
 	}
 
 	ws.onmessage = function(message) {
@@ -117,6 +115,7 @@ var COMMANDS = {
 		nicks.forEach(function(nick) {
 			userAdd(nick)
 		})
+		wasConnected = true
 		pushMessage('*', "Users online: " + nicks.join(", "), Date.now(), 'info')
 	},
 	onlineAdd: function(args) {
