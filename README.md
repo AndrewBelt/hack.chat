@@ -3,6 +3,9 @@
 ## Local install
 
 ### Server
+
+node v0.12 or higher is required to run the server.
+
 * `git clone https://github.com/AndrewBelt/hack.chat.git`
 * `cd hack.chat`
 * `npm install`

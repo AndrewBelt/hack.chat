@@ -9,19 +9,21 @@ var frontpage = [
 	"Channels are created and joined by going to https://hack.chat/?your-channel. There are no channel lists, so a secret channel name can be used for private discussions.",
 	"",
 	"Here are some pre-made channels you can join:",
-	"?lobby ?meta ?random",
+	"?lounge ?meta",
+	"?math ?physics ?space",
 	"?technology ?programming",
-	"?math ?physics ?asciiart",
+	"?games ?banana",
 	"And here's a random one generated just for you: ?" + Math.random().toString(36).substr(2, 8),
 	"",
 	"",
 	"Formatting:",
 	"Whitespace is preserved, so source code can be pasted verbatim.",
-	"Surround LaTeX with a dollar sign for inline style $\\zeta(2) = \\pi^2/6$, and two dollars for display.",
-	"$$\\int_0^1 \\int_0^1 \\frac{1}{1-xy} dx dy = \\frac{\\pi^2}{6}$$",
+	"Surround LaTeX with a dollar sign for inline style $\\zeta(2) = \\pi^2/6$, and two dollars for display. $$\\int_0^1 \\int_0^1 \\frac{1}{1-xy} dx dy = \\frac{\\pi^2}{6}$$",
 	"",
-	"GitHub repo: https://github.com/AndrewBelt/hack.chat",
-	"Server and client released under the GNU General Public License.",
+	"GitHub: https://github.com/AndrewBelt/hack.chat",
+	"Android app: https://goo.gl/UkbKYy",
+	"",
+	"Server and web client released under the GNU General Public License.",
 	"No message history is retained on the hack.chat server.",
 ].join("\n")
 
@@ -269,6 +271,7 @@ $('#footer').onclick = function() {
 
 $('#chatinput').onkeydown = function(e) {
 	if (e.keyCode == 13 /* ENTER */ && !e.shiftKey) {
+		// Submit message
 		if (e.target.value != '') {
 			var text = e.target.value
 			e.target.value = ''
@@ -280,16 +283,46 @@ $('#chatinput').onkeydown = function(e) {
 		e.preventDefault()
 	}
 	else if (e.keyCode == 38 && isInFirstLine(e) /* UP */) {
-		// Restore previous sent message
+		// Restore previous sent messages
 		if (e.target.value == '' || lastSentPos > -1) {
 			lastSentPos++
 			updateLastSentInput(e)
+			e.target.selectionStart = e.target.selectionEnd = e.target.value.length
+			e.preventDefault()
 		}
 	}
 	else if(e.keyCode == 40 && isInLastLine(e) /* DOWN */) {
 		if(lastSentPos >= 0) {
 			lastSentPos--
 			updateLastSentInput(e)
+			e.target.selectionStart = e.target.selectionEnd = 0
+			e.preventDefault()
+		}
+	}
+	else if (e.keyCode == 27 /* ESC */) {
+		// Clear input field
+		e.target.value = ''
+		updateInputSize()
+	}
+	else if (e.keyCode == 9 /* TAB */) {
+		// Tab complete nicknames starting with @
+		e.preventDefault()
+		var pos = e.target.selectionStart || 0
+		var text = e.target.value
+		var index = text.lastIndexOf('@', pos)
+		if (index >= 0) {
+			var before = text.substr(0, index)
+			var stub = text.substr(index + 1, pos - index - 1)
+			var after = text.substr(pos)
+			// Search for nick beginning with stub
+			var nicks = online.filter(function(nick) {
+				return nick.indexOf(stub) == 0
+			})
+			if (nicks.length == 1) {
+				e.target.value = before + '@' + nicks[0] + after
+				e.target.selectionStart = e.target.selectionEnd = before.length + 1 + nicks[0].length
+				updateInputSize()
+			}
 		}
 	}
 }
@@ -396,6 +429,8 @@ $('#parse-latex').onchange = function(e) {
 
 // User list
 
+var online = []
+
 function userAdd(nick) {
 	var user = document.createElement('a')
 	user.textContent = nick
@@ -403,6 +438,7 @@ function userAdd(nick) {
 	var userLi = document.createElement('li')
 	userLi.appendChild(user)
 	$('#users').appendChild(userLi)
+	online.push(nick)
 }
 
 function userRemove(nick) {
@@ -414,6 +450,10 @@ function userRemove(nick) {
 			users.removeChild(user)
 		}
 	}
+	var index = online.indexOf(nick)
+	if (index >= 0) {
+		online.splice(index, 1)
+	}
 }
 
 function usersClear() {
@@ -421,6 +461,7 @@ function usersClear() {
 	while (users.firstChild) {
 		users.removeChild(users.firstChild)
 	}
+	online.length = 0
 }
 
 function userInvite(e) {
