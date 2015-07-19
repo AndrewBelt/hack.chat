@@ -45,8 +45,9 @@ function localStorageSet(key, val) {
 var ws
 var myNick = localStorageGet('my-nick')
 var myChannel = window.location.search.replace(/^\?/, '')
-var lastSent = []
-var lastSentPos = -1;
+var lastSent = [""]
+var lastSentPos = 0
+
 
 // Ping server every 50 seconds to retain WebSocket connection
 window.setInterval(function() {
@@ -276,32 +277,40 @@ $('#chatinput').onkeydown = function(e) {
 			var text = e.target.value
 			e.target.value = ''
 			send({cmd: 'chat', text: text})
-			lastSent.unshift(text)
-			lastSentPos = -1
+			lastSent[0] = text
+			lastSent.unshift("")
+			lastSentPos = 0
 			updateInputSize()
 		}
 		e.preventDefault()
 	}
-	else if (e.keyCode == 38 && isInFirstLine(e) /* UP */) {
+	else if (e.keyCode == 38 /* UP */) {
 		// Restore previous sent messages
-		if (e.target.value == '' || lastSentPos > -1) {
-			lastSentPos++
-			updateLastSentInput(e)
+		if (isInFirstLine() && lastSentPos < lastSent.length - 1) {
+			if (lastSentPos == 0) {
+				lastSent[0] = e.target.value
+			}
+			lastSentPos += 1
+			e.target.value = lastSent[lastSentPos]
 			e.target.selectionStart = e.target.selectionEnd = e.target.value.length
+			updateInputSize()
 			e.preventDefault()
 		}
 	}
-	else if(e.keyCode == 40 && isInLastLine(e) /* DOWN */) {
-		if(lastSentPos >= 0) {
-			lastSentPos--
-			updateLastSentInput(e)
+	else if (e.keyCode == 40 /* DOWN */) {
+		if (isInLastLine(e) && lastSentPos > 0) {
+			lastSentPos -= 1
+			e.target.value = lastSent[lastSentPos]
 			e.target.selectionStart = e.target.selectionEnd = 0
+			updateInputSize()
 			e.preventDefault()
 		}
 	}
 	else if (e.keyCode == 27 /* ESC */) {
 		// Clear input field
-		e.target.value = ''
+		e.target.value = ""
+		lastSentPos = 0
+		lastSent[lastSentPos] = ""
 		updateInputSize()
 	}
 	else if (e.keyCode == 9 /* TAB */) {
@@ -327,38 +336,19 @@ $('#chatinput').onkeydown = function(e) {
 	}
 }
 
-function isInFirstLine(e) {
-	var text = e.target.value;
-	var endPos = e.target.selectionEnd;
 
-	if(text.substring(0, endPos).indexOf("\n") === -1)
-		return true;
-	else
-		false;
-}
-function isInLastLine(e) {
-	var text = e.target.value;
-	var startPos = e.target.selectionStart;
-
-	if(text.substring(startPos).indexOf("\n") === -1)
-		return true;
-	else
-		false;
+function isInFirstLine() {
+	var input = $('#chatinput')
+	var pos = input.selectionStart || 0
+	return input.value.substr(0, pos).indexOf("\n") == -1
 }
 
-function updateLastSentInput(e) {
-	if(lastSentPos >= lastSent.length)
-		lastSentPos = lastSent.length -1
-
-	if(lastSentPos < 0)
-		e.target.value = ''
-	else
-		e.target.value = lastSent[lastSentPos]
-
-	e.target.selectionStart = e.target.value.length
-	updateInputSize()
-	e.preventDefault()
+function isInLastLine() {
+	var input = $('#chatinput')
+	var pos = input.selectionStart || 0
+	return input.value.substr(pos).indexOf("\n") == -1
 }
+
 
 function updateInputSize() {
 	var atBottom = isAtBottom()
@@ -393,10 +383,7 @@ $('#sidebar').onmouseleave = document.ontouchstart = function() {
 	}
 }
 
-$('#clear-history').onclick = function() {
-	// clear lastSent history
-	lastSent = []
-	lastSentPos = -1
+$('#clear-messages').onclick = function() {
 	// Delete children elements
 	var messages = $('#messages')
 	while (messages.firstChild) {
