@@ -10,7 +10,7 @@ var frontpage = [
 	"",
 	"Here are some pre-made channels you can join:",
 	"?lounge ?meta",
-	"?math ?physics ?space",
+	"?math ?physics ?chemistry",
 	"?technology ?programming",
 	"?games ?banana",
 	"And here's a random one generated just for you: ?" + Math.random().toString(36).substr(2, 8),
@@ -204,7 +204,12 @@ function pushMessage(nick, text, time, cls) {
 function insertAtCursor(text) {
 	var input = $('#chatinput')
 	var start = input.selectionStart || 0
-	input.value = input.value.substr(0, start) + text + input.value.substr(start)
+	var before = input.value.substr(0, start)
+	var after = input.value.substr(start)
+	before += text
+	input.value = before + after
+	input.selectionStart = input.selectionEnd = before.length
+	updateInputSize()
 }
 
 
@@ -276,6 +281,7 @@ $('#footer').onclick = function() {
 
 $('#chatinput').onkeydown = function(e) {
 	if (e.keyCode == 13 /* ENTER */ && !e.shiftKey) {
+		e.preventDefault()
 		// Submit message
 		if (e.target.value != '') {
 			var text = e.target.value
@@ -286,11 +292,11 @@ $('#chatinput').onkeydown = function(e) {
 			lastSentPos = 0
 			updateInputSize()
 		}
-		e.preventDefault()
 	}
 	else if (e.keyCode == 38 /* UP */) {
 		// Restore previous sent messages
 		if (e.target.selectionStart === 0 && lastSentPos < lastSent.length - 1) {
+			e.preventDefault()
 			if (lastSentPos == 0) {
 				lastSent[0] = e.target.value
 			}
@@ -298,19 +304,19 @@ $('#chatinput').onkeydown = function(e) {
 			e.target.value = lastSent[lastSentPos]
 			e.target.selectionStart = e.target.selectionEnd = e.target.value.length
 			updateInputSize()
-			e.preventDefault()
 		}
 	}
 	else if (e.keyCode == 40 /* DOWN */) {
 		if (e.target.selectionStart === e.target.value.length && lastSentPos > 0) {
+			e.preventDefault()
 			lastSentPos -= 1
 			e.target.value = lastSent[lastSentPos]
 			e.target.selectionStart = e.target.selectionEnd = 0
 			updateInputSize()
-			e.preventDefault()
 		}
 	}
 	else if (e.keyCode == 27 /* ESC */) {
+		e.preventDefault()
 		// Clear input field
 		e.target.value = ""
 		lastSentPos = 0
@@ -324,17 +330,13 @@ $('#chatinput').onkeydown = function(e) {
 		var text = e.target.value
 		var index = text.lastIndexOf('@', pos)
 		if (index >= 0) {
-			var before = text.substr(0, index)
-			var stub = text.substr(index + 1, pos - index - 1)
-			var after = text.substr(pos)
+			var stub = text.substring(index + 1, pos)
 			// Search for nick beginning with stub
 			var nicks = onlineUsers.filter(function(nick) {
 				return nick.indexOf(stub) == 0
 			})
 			if (nicks.length == 1) {
-				e.target.value = before + '@' + nicks[0] + after
-				e.target.selectionStart = e.target.selectionEnd = before.length + 1 + nicks[0].length
-				updateInputSize()
+				insertAtCursor(nicks[0].substr(stub.length) + " ")
 			}
 		}
 	}
