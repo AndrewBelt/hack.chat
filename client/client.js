@@ -286,7 +286,7 @@ $('#chatinput').onkeydown = function(e) {
 	}
 	else if (e.keyCode == 38 /* UP */) {
 		// Restore previous sent messages
-		if (isInFirstLine() && lastSentPos < lastSent.length - 1) {
+		if (e.target.selectionStart === 0 && lastSentPos < lastSent.length - 1) {
 			if (lastSentPos == 0) {
 				lastSent[0] = e.target.value
 			}
@@ -298,7 +298,7 @@ $('#chatinput').onkeydown = function(e) {
 		}
 	}
 	else if (e.keyCode == 40 /* DOWN */) {
-		if (isInLastLine(e) && lastSentPos > 0) {
+		if (e.target.selectionStart === e.target.value.length && lastSentPos > 0) {
 			lastSentPos -= 1
 			e.target.value = lastSent[lastSentPos]
 			e.target.selectionStart = e.target.selectionEnd = 0
@@ -334,19 +334,6 @@ $('#chatinput').onkeydown = function(e) {
 			}
 		}
 	}
-}
-
-
-function isInFirstLine() {
-	var input = $('#chatinput')
-	var pos = input.selectionStart || 0
-	return input.value.substr(0, pos).indexOf("\n") == -1
-}
-
-function isInLastLine() {
-	var input = $('#chatinput')
-	var pos = input.selectionStart || 0
-	return input.value.substr(pos).indexOf("\n") == -1
 }
 
 
