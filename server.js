@@ -73,9 +73,8 @@ function broadcast(data, channel) {
 }
 
 function nicknameValid(nick) {
-	if (/[$,*!?]/.test(nick)) return false
-	// allow all other "normal" ascii characters
-	return /^[\x20-\x7e]{1,32}$/.test(nick)
+	// Allow letters, numbers, and _
+	return /^[a-zA-Z0-9_]{1,32}$/.test(nick)
 }
 
 function getAddress(client) {
@@ -130,7 +129,7 @@ var COMMANDS = {
 			this.admin = true
 		}
 		if (!nicknameValid(nick)) {
-			send({cmd: 'warn', text: "Nickname invalid"}, this)
+			send({cmd: 'warn', text: "Nickname must consist of up to 32 letters, numbers, and underscores"}, this)
 			return
 		}
 
