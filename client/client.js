@@ -98,14 +98,18 @@ function join(channel) {
 
 var COMMANDS = {
 	chat: function(args) {
+		var nick = args.nick
 		var cls
 		if (args.admin) {
 			cls = 'admin'
 		}
-		else if (myNick == args.nick) {
+		else if (myNick == nick) {
 			cls = 'me'
 		}
-		pushMessage(args.nick, args.text, args.time, cls)
+		if (ignoredUsers.indexOf(nick) >= 0) {
+			return
+		}
+		pushMessage(nick, args.text, args.time, cls)
 	},
 	info: function(args) {
 		pushMessage('*', args.text, args.time, 'info')
@@ -324,7 +328,7 @@ $('#chatinput').onkeydown = function(e) {
 			var stub = text.substr(index + 1, pos - index - 1)
 			var after = text.substr(pos)
 			// Search for nick beginning with stub
-			var nicks = online.filter(function(nick) {
+			var nicks = onlineUsers.filter(function(nick) {
 				return nick.indexOf(stub) == 0
 			})
 			if (nicks.length == 1) {
@@ -403,16 +407,19 @@ $('#parse-latex').onchange = function(e) {
 
 // User list
 
-var online = []
+var onlineUsers = []
+var ignoredUsers = []
 
 function userAdd(nick) {
 	var user = document.createElement('a')
 	user.textContent = nick
-	user.onclick = userInvite
+	user.onclick = function(e) {
+		userInvite(nick)
+	}
 	var userLi = document.createElement('li')
 	userLi.appendChild(user)
 	$('#users').appendChild(userLi)
-	online.push(nick)
+	onlineUsers.push(nick)
 }
 
 function userRemove(nick) {
@@ -424,9 +431,9 @@ function userRemove(nick) {
 			users.removeChild(user)
 		}
 	}
-	var index = online.indexOf(nick)
+	var index = onlineUsers.indexOf(nick)
 	if (index >= 0) {
-		online.splice(index, 1)
+		onlineUsers.splice(index, 1)
 	}
 }
 
@@ -435,12 +442,15 @@ function usersClear() {
 	while (users.firstChild) {
 		users.removeChild(users.firstChild)
 	}
-	online.length = 0
+	onlineUsers.length = 0
 }
 
-function userInvite(e) {
-	var nick = e.target.textContent
+function userInvite(nick) {
 	send({cmd: 'invite', nick: nick})
+}
+
+function userIgnore(nick) {
+	ignoredUsers.push(nick)
 }
 
 /* color scheme switcher */
