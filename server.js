@@ -3,6 +3,7 @@
 
 var fs = require('fs')
 var ws = require('ws')
+var crypto = require('crypto')
 
 var config = JSON.parse(fs.readFileSync('./config.json'))
 
@@ -73,8 +74,8 @@ function broadcast(data, channel) {
 }
 
 function nicknameValid(nick) {
-	// Allow letters, numbers, and _
-	return /^[a-zA-Z0-9_]{1,32}$/.test(nick)
+	// Allow letters, numbers, and underscores
+	return /^[a-zA-Z0-9_]{1,24}$/.test(nick)
 }
 
 function getAddress(client) {
@@ -88,6 +89,12 @@ function getAddress(client) {
 	else {
 		return client.upgradeReq.connection.remoteAddress
 	}
+}
+
+function hash(password) {
+	var sha = crypto.createHash('sha256')
+	sha.update(password + config.salt)
+	return sha.digest('base64').substr(0, 6)
 }
 
 
@@ -119,18 +126,26 @@ var COMMANDS = {
 		}
 
 		// Process nickname
-		nick = nick.trim()
-		if (nick.toLowerCase() == config.admin.toLowerCase()) {
-			send({cmd: 'warn', text: "Cannot impersonate the admin"}, this)
-			return
-		}
-		if (nick == config.password) {
-			nick = config.admin
-			this.admin = true
-		}
+		var nickArr = nick.split('#', 2)
+		nick = nickArr[0].trim()
+
 		if (!nicknameValid(nick)) {
-			send({cmd: 'warn', text: "Nickname must consist of up to 32 letters, numbers, and underscores"}, this)
+			send({cmd: 'warn', text: "Nickname must consist of up to 24 letters, numbers, and underscores"}, this)
 			return
+		}
+
+		var password = nickArr[1]
+		if (nick.toLowerCase() == config.admin.toLowerCase()) {
+			if (password != config.password) {
+				send({cmd: 'warn', text: "Cannot impersonate the admin"}, this)
+				return
+			}
+			else {
+				this.admin = true
+			}
+		}
+		else if (password) {
+			this.trip = hash(password)
 		}
 
 		var address = getAddress(this)
@@ -183,6 +198,9 @@ var COMMANDS = {
 		var data = {cmd: 'chat', nick: this.nick, text: text}
 		if (this.admin) {
 			data.admin = true
+		}
+		if (this.trip) {
+			data.trip = this.trip
 		}
 		broadcast(data, this.channel)
 	},

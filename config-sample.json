@@ -3,5 +3,6 @@
   "password": "hunter2",
   "host": "0.0.0.0",
   "port": "6060",
-  "x_forwarded_for": false
+  "x_forwarded_for": false,
+  "salt": "insert-randomly-generated-string-here"
 }

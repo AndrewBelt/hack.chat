@@ -80,7 +80,7 @@ function join(channel) {
 
 	ws.onclose = function() {
 		if (wasConnected) {
-			pushMessage('!', "Server disconnected. Attempting to reconnect...", Date.now(), 'warn')
+			pushMessage({nick: '!', text: "Server disconnected. Attempting to reconnect..."})
 		}
 		window.setTimeout(function() {
 			join(channel)
@@ -98,24 +98,18 @@ function join(channel) {
 
 var COMMANDS = {
 	chat: function(args) {
-		var nick = args.nick
-		var cls
-		if (args.admin) {
-			cls = 'admin'
-		}
-		else if (myNick == nick) {
-			cls = 'me'
-		}
-		if (ignoredUsers.indexOf(nick) >= 0) {
+		if (ignoredUsers.indexOf(args.nick) >= 0) {
 			return
 		}
-		pushMessage(nick, args.text, args.time, cls)
+		pushMessage(args)
 	},
 	info: function(args) {
-		pushMessage('*', args.text, args.time, 'info')
+		args.nick = '*'
+		pushMessage(args)
 	},
 	warn: function(args) {
-		pushMessage('!', args.text, args.time, 'warn')
+		args.nick = '!'
+		pushMessage(args)
 	},
 	onlineSet: function(args) {
 		var nicks = args.nicks
@@ -123,54 +117,71 @@ var COMMANDS = {
 		nicks.forEach(function(nick) {
 			userAdd(nick)
 		})
-		pushMessage('*', "Users online: " + nicks.join(", "), Date.now(), 'info')
+		pushMessage({nick: '*', text: "Users online: " + nicks.join(", ")})
 	},
 	onlineAdd: function(args) {
 		var nick = args.nick
 		userAdd(nick)
 		if ($('#joined-left').checked) {
-			pushMessage('*', nick + " joined", Date.now(), 'info')
+			pushMessage({nick: '*', text: nick + " joined"})
 		}
 	},
 	onlineRemove: function(args) {
 		var nick = args.nick
 		userRemove(nick)
 		if ($('#joined-left').checked) {
-			pushMessage('*', nick + " left", Date.now(), 'info')
+			pushMessage({nick: '*', text: nick + " left"})
 		}
 	},
 }
 
 
-function pushMessage(nick, text, time, cls) {
+function pushMessage(args) {
 	// Message container
 	var messageEl = document.createElement('div')
 	messageEl.classList.add('message')
-	if (cls) {
-		messageEl.classList.add(cls)
+	if (args.admin) {
+		messageEl.classList.add('admin')
+	}
+	else if (args.nick == myNick) {
+		messageEl.classList.add('me')
+	}
+	else if (args.nick == '!') {
+		messageEl.classList.add('warn')
+	}
+	else if (args.nick == '*') {
+		messageEl.classList.add('info')
 	}
 
 	// Nickname
-	var nickEl = document.createElement('a')
-	nickEl.textContent = nick || ''
-	if (time) {
-		var date = new Date(time)
-		nickEl.title = date.toLocaleString()
-	}
-	nickEl.onclick = function() {
-		insertAtCursor("@" + nick + " ")
-		$('#chatinput').focus()
-	}
 	var nickSpanEl = document.createElement('span')
 	nickSpanEl.classList.add('nick')
-	nickSpanEl.appendChild(nickEl)
 	messageEl.appendChild(nickSpanEl)
+
+	if (args.trip) {
+		var tripEl = document.createElement('span')
+		tripEl.textContent = args.trip + " "
+		tripEl.classList.add('trip')
+		nickSpanEl.appendChild(tripEl)
+	}
+
+	if (args.nick) {
+		var nickLinkEl = document.createElement('a')
+		nickLinkEl.textContent = args.nick
+		nickLinkEl.onclick = function() {
+			insertAtCursor("@" + args.nick + " ")
+			$('#chatinput').focus()
+		}
+		var date = new Date(args.time || Date.now())
+		nickLinkEl.title = date.toLocaleString()
+		nickSpanEl.appendChild(nickLinkEl)
+	}
 
 	// Text
 	var textEl = document.createElement('pre')
 	textEl.classList.add('text')
 
-	textEl.textContent = text || ''
+	textEl.textContent = args.text || ''
 	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
 
 	if ($('#parse-latex').checked) {
@@ -510,7 +521,7 @@ $('#scheme-selector').value = currentScheme
 /* main */
 
 if (myChannel == '') {
-	pushMessage('', frontpage)
+	pushMessage({text: frontpage})
 	$('#footer').classList.add('hidden')
 	$('#sidebar').classList.add('hidden')
 }
