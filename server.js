@@ -5,7 +5,25 @@ var fs = require('fs')
 var ws = require('ws')
 var crypto = require('crypto')
 
-var config = JSON.parse(fs.readFileSync('./config.json'))
+
+var config = {}
+function loadConfig(filename) {
+	try {
+		var data = fs.readFileSync(filename)
+		config = JSON.parse(data)
+		console.log("Loaded " + filename)
+	}
+	catch (e) {
+		console.warn(e)
+	}
+}
+
+var configFilename = 'config.json'
+loadConfig(configFilename)
+fs.watchFile(configFilename, {persistent: false}, function() {
+	loadConfig(configFilename)
+})
+
 
 var server = new ws.Server({host: config.host, port: config.port})
 console.log("Started server on " + config.host + ":" + config.port)
@@ -15,7 +33,7 @@ server.on('connection', function(socket) {
 		try {
 			// Don't penalize yet, but check whether IP is rate-limited
 			if (POLICE.frisk(getAddress(socket), 0)) {
-				send({cmd: 'warn', text: "Your IP is being rate-limited."}, socket)
+				send({cmd: 'warn', text: "Your IP is being rate-limited or blocked."}, socket)
 				return
 			}
 			// Penalize here, but don't do anything about it
@@ -97,6 +115,20 @@ function hash(password) {
 	return sha.digest('base64').substr(0, 6)
 }
 
+function isAdmin(client) {
+	return client.nick == config.admin
+}
+
+function isMod(client) {
+	if (isAdmin(client)) return true
+	if (config.mods) {
+		if (client.trip && config.mods.indexOf(client.trip) > -1) {
+			return true
+		}
+	}
+	return false
+}
+
 
 // `this` bound to client
 var COMMANDS = {
@@ -139,9 +171,6 @@ var COMMANDS = {
 			if (password != config.password) {
 				send({cmd: 'warn', text: "Cannot impersonate the admin"}, this)
 				return
-			}
-			else {
-				this.admin = true
 			}
 		}
 		else if (password) {
@@ -196,7 +225,7 @@ var COMMANDS = {
 		}
 
 		var data = {cmd: 'chat', nick: this.nick, text: text}
-		if (this.admin) {
+		if (isAdmin(this)) {
 			data.admin = true
 		}
 		if (this.trip) {
@@ -237,39 +266,41 @@ var COMMANDS = {
 		send({cmd: 'info', text: this.nick + " invited you to ?" + channel}, friend)
 	},
 
-	// Admin stuff below this point
+	// Moderator-only commands below this point
 
 	ban: function(args) {
-		var channel = args.channel ? String(args.channel) : this.channel
+		if (!isMod(this)) {
+			return
+		}
+
 		var nick = String(args.nick)
-
-		if (!this.admin) {
-			return
-		}
-		if (!channel) {
+		if (!this.channel) {
 			return
 		}
 
-		var badClient
-		for (var client of server.clients) {
-			if (client.channel == channel && client.nick == nick) {
-				badClient = client
-				break
-			}
-		}
+		var badClient = server.clients.filter(function(client) {
+			return client.channel == this.channel && client.nick == nick
+		}, this)[0]
 
 		if (!badClient) {
-			send({cmd: 'warn', text: "Could not find " + nick + " in ?" + channel}, this)
+			send({cmd: 'warn', text: "Could not find " + nick}, this)
+			return
+		}
+
+		if (isMod(badClient)) {
+			send({cmd: 'warn', text: "Cannot ban moderator"}, this)
 			return
 		}
 
 		POLICE.arrest(getAddress(badClient))
-		send({cmd: 'warn', text: "You have been banned. :("}, badClient)
-		send({cmd: 'info', text: "Banned " + nick + " in ?" + channel}, this)
+		console.log(this.nick + " [" + this.trip + "] banned " + nick + " in " + this.channel)
+		broadcast({cmd: 'info', text: "Banned " + nick}, this.channel)
 	},
 
+	// Admin-only commands below this point
+
 	listUsers: function() {
-		if (!this.admin) {
+		if (!isAdmin(this)) {
 			return
 		}
 		var channels = {}
@@ -292,10 +323,10 @@ var COMMANDS = {
 	},
 
 	broadcast: function(args) {
-		var text = String(args.text)
-		if (!this.admin) {
+		if (!isAdmin(this)) {
 			return
 		}
+		var text = String(args.text)
 		broadcast({cmd: 'info', text: "Server broadcast: " + text})
 	},
 }
@@ -307,15 +338,19 @@ var POLICE = {
 	halflife: 30000, // ms
 	threshold: 15,
 
-	frisk: function(id, deltaScore) {
+	search: function(id) {
 		var record = this.records[id]
 		if (!record) {
 			record = this.records[id] = {
 				time: Date.now(),
-				score: 0
+				score: 0,
 			}
 		}
+		return record
+	},
 
+	frisk: function(id, deltaScore) {
+		var record = this.search(id)
 		if (record.arrested) {
 			return true
 		}
@@ -323,11 +358,14 @@ var POLICE = {
 		record.score *= Math.pow(2, -(Date.now() - record.time)/POLICE.halflife)
 		record.score += deltaScore
 		record.time = Date.now()
-		return record.score >= this.threshold
+		if (record.score >= this.threshold) {
+			return true
+		}
+		return false
 	},
 
 	arrest: function(id) {
-		var record = this.records[id]
+		var record = this.search(id)
 		if (record) {
 			record.arrested = true
 		}
