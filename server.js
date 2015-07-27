@@ -266,6 +266,18 @@ var COMMANDS = {
 		send({cmd: 'info', text: this.nick + " invited you to ?" + channel}, friend)
 	},
 
+	stats: function(args) {
+		var ips = {}
+		var channels = {}
+		for (var client of server.clients) {
+			if (client.channel) {
+				channels[client.channel] = true
+				ips[getAddress(client)] = true
+			}
+		}
+		send({cmd: 'info', text: Object.keys(ips).length + " unique IPs in " + Object.keys(channels).length + " channels"}, this)
+	},
+
 	// Moderator-only commands below this point
 
 	ban: function(args) {
