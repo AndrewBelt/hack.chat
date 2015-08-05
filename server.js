@@ -9,9 +9,9 @@ var crypto = require('crypto')
 var config = {}
 function loadConfig(filename) {
 	try {
-		var data = fs.readFileSync(filename)
+		var data = fs.readFileSync(filename, 'utf8')
 		config = JSON.parse(data)
-		console.log("Loaded " + filename)
+		console.log("Loaded config '" + filename + "'")
 	}
 	catch (e) {
 		console.warn(e)
@@ -350,6 +350,23 @@ var POLICE = {
 	halflife: 30000, // ms
 	threshold: 15,
 
+	loadJail: function(filename) {
+		var ids
+		try {
+			var text = fs.readFileSync(filename, 'utf8')
+			ids = text.split(/\r?\n/)
+		}
+		catch (e) {
+			return
+		}
+		for (var id of ids) {
+			if (id && id[0] != '#') {
+				this.arrest(id)
+			}
+		}
+		console.log("Loaded jail '" + filename + "'")
+	},
+
 	search: function(id) {
 		var record = this.records[id]
 		if (!record) {
@@ -383,3 +400,5 @@ var POLICE = {
 		}
 	},
 }
+
+POLICE.loadJail('jail.txt')
