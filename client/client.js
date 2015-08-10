@@ -53,7 +53,7 @@ var lastSentPos = 0
 
 // Ping server every 50 seconds to retain WebSocket connection
 window.setInterval(function() {
-	send({cmd: 'ping'})
+	send({cmd: 'ping', randomdata: Math.random().toString(36).substring(7)})
 }, 50000)
 
 
