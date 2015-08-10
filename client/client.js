@@ -30,15 +30,17 @@ var frontpage = [
 function $(query) {return document.querySelector(query)}
 
 function localStorageGet(key) {
-	if (localStorage) {
-		return localStorage[key]
+	try {
+		return window.localStorage[key]
 	}
+	catch(e) {}
 }
 
 function localStorageSet(key, val) {
-	if (localStorage) {
-		localStorage[key] = val
+	try {
+		window.localStorage[key] = val
 	}
+	catch(e) {}
 }
 
 
