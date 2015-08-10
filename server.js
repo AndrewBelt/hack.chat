@@ -134,7 +134,7 @@ function isMod(client) {
 var COMMANDS = {
 	ping: function(args) {
 		var randomData = args.randomdata
-        send({cmd: 'pong', randomdata: randomData}, this)
+		send({cmd: 'pong', randomdata: randomData}, this)
 	},
 
 	join: function(args) {
