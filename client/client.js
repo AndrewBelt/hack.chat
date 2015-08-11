@@ -154,7 +154,7 @@ function pushMessage(args) {
 	else if (args.nick == '*') {
 		messageEl.classList.add('info')
 	}
-	else if (args.text && args.text.indexOf("@" + myNick + " ") != -1) {
+	else if (args.text && args.text.indexOf("@" + myNick.split("#")[0] + " ") != -1) {
 		messageEl.classList.add('direct')
 	}
 
