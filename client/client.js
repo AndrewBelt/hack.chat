@@ -343,10 +343,10 @@ $('#chatinput').onkeydown = function(e) {
 		var text = e.target.value
 		var index = text.lastIndexOf('@', pos)
 		if (index >= 0) {
-			var stub = text.substring(index + 1, pos)
+			var stub = text.substring(index + 1, pos).toLowerCase()
 			// Search for nick beginning with stub
 			var nicks = onlineUsers.filter(function(nick) {
-				return nick.indexOf(stub) == 0
+				return nick.toLowerCase().indexOf(stub) == 0
 			})
 			if (nicks.length == 1) {
 				insertAtCursor(nicks[0].substr(stub.length) + " ")
