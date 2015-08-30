@@ -188,7 +188,7 @@ var COMMANDS = {
 		}
 
 		// Announce the new user
-		broadcast({cmd: 'onlineAdd', nick: nick}, channel)
+		broadcast({cmd: 'onlineAdd', nick: nick, trip: this.trip}, channel)
 
 		// Formally join channel
 		this.channel = channel
@@ -196,12 +196,15 @@ var COMMANDS = {
 
 		// Set the online users for new user
 		var nicks = []
+		var trips = []
 		for (var client of server.clients) {
 			if (client.channel === channel) {
 				nicks.push(client.nick)
+				if (this.trip)
+					trips.push(client.trip);
 			}
 		}
-		send({cmd: 'onlineSet', nicks: nicks}, this)
+		send({cmd: 'onlineSet', nicks: nicks, trips: trips}, this)
 	},
 
 	chat: function(args) {
