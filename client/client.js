@@ -76,6 +76,7 @@ function join(channel) {
 		if (myNick) {
 			localStorageSet('my-nick', myNick)
 			send({cmd: 'join', channel: channel, nick: myNick})
+			myNick = myNick.split('#')[0];
 		}
 		wasConnected = true
 	}
