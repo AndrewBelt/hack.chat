@@ -45,7 +45,7 @@ function localStorageSet(key, val) {
 
 
 var ws
-var myNick = localStorageGet('my-nick')
+var myNick
 var myChannel = window.location.search.replace(/^\?/, '')
 var lastSent = [""]
 var lastSentPos = 0
@@ -70,6 +70,7 @@ function join(channel) {
 	var wasConnected = false
 
 	ws.onopen = function() {
+		myNick = = localStorageGet('my-nick')
 		if (!wasConnected) {
 			myNick = prompt('Nickname:', myNick)
 		}
