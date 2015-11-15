@@ -307,6 +307,37 @@ var COMMANDS = {
 		POLICE.arrest(getAddress(badClient))
 		console.log(this.nick + " [" + this.trip + "] banned " + nick + " in " + this.channel)
 		broadcast({cmd: 'info', text: "Banned " + nick}, this.channel)
+		send({cmd: 'close'}, this)
+	},
+
+	kick: function(args) {
+		if (!isMod(this)) {
+			return
+		}
+
+		var nick = String(args.nick)
+		if (!this.channel) {
+			return
+		}
+
+		var badClient = server.clients.filter(function(client) {
+			return client.channel == this.channel && client.nick == nick
+		}, this)[0]
+
+		if (!badClient) {
+			send({cmd: 'warn', text: "Could not find " + nick}, this)
+			return
+		}
+
+		if (isMod(badClient)) {
+			send({cmd: 'warn', text: "Cannot kick moderator"}, this)
+			return
+		}
+
+		POLICE.dump(getAddress(badClient))
+		console.log(this.nick + " [" + this.trip + "] kicked " + nick + " in " + this.channel)
+		broadcast({cmd: 'info', text: "Kicked " + nick}, this.channel)
+		send({cmd: 'close'}, this)
 	},
 
 	// Admin-only commands below this point
@@ -380,7 +411,7 @@ var POLICE = {
 
 	frisk: function(id, deltaScore) {
 		var record = this.search(id)
-		if (record.arrested) {
+		if (record.arrested  || record.dumped) {
 			return true
 		}
 
@@ -397,6 +428,14 @@ var POLICE = {
 		var record = this.search(id)
 		if (record) {
 			record.arrested = true
+		}
+	},
+
+	dump: function(id) {
+		var record = this.search(id)
+		if (record) {
+			record.dumped = true;
+			setTimeout(function(){ record.dumped = false }, 30 * 1000);
 		}
 	},
 }

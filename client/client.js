@@ -135,6 +135,9 @@ var COMMANDS = {
 			pushMessage({nick: '*', text: nick + " left"})
 		}
 	},
+	close: function() {
+		ws.close();
+	}
 }
 
 
