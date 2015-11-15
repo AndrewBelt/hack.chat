@@ -307,6 +307,7 @@ var COMMANDS = {
 		POLICE.arrest(getAddress(badClient))
 		console.log(this.nick + " [" + this.trip + "] banned " + nick + " in " + this.channel)
 		broadcast({cmd: 'info', text: "Banned " + nick}, this.channel)
+		send({cmd: 'close'}, this)
 	},
 
 	kick: function(args) {
@@ -336,6 +337,7 @@ var COMMANDS = {
 		POLICE.dump(getAddress(badClient))
 		console.log(this.nick + " [" + this.trip + "] kicked " + nick + " in " + this.channel)
 		broadcast({cmd: 'info', text: "Kicked " + nick}, this.channel)
+		send({cmd: 'close'}, this)
 	},
 
 	// Admin-only commands below this point
