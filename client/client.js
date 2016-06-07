@@ -49,7 +49,7 @@ var myNick = localStorageGet('my-nick')
 var myChannel = window.location.search.replace(/^\?/, '')
 var lastSent = [""]
 var lastSentPos = 0
-var banned = localStorageGet('banned') == 'true' ? true : false;
+var banned = localStorageGet('banned') == 'true';
 
 
 // Ping server every 50 seconds to retain WebSocket connection
