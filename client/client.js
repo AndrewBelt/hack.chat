@@ -49,6 +49,7 @@ var myNick = localStorageGet('my-nick')
 var myChannel = window.location.search.replace(/^\?/, '')
 var lastSent = [""]
 var lastSentPos = 0
+var banned = localStorageGet('banned') == 'true' ? true : false;
 
 
 // Ping server every 50 seconds to retain WebSocket connection
@@ -75,7 +76,9 @@ function join(channel) {
 		}
 		if (myNick) {
 			localStorageSet('my-nick', myNick)
-			send({cmd: 'join', channel: channel, nick: myNick})
+			if (!banned) {
+				send({cmd: 'join', channel: channel, nick: myNick})
+			}
 		}
 		wasConnected = true
 	}
@@ -135,6 +138,12 @@ var COMMANDS = {
 			pushMessage({nick: '*', text: nick + " left"})
 		}
 	},
+	data: function(args) {
+		if (args.banned) {
+			banned = true;
+			localStorageSet('banned', banned)
+		}
+	}
 }
 
 
