@@ -228,6 +228,9 @@ var COMMANDS = {
 		if (isAdmin(this)) {
 			data.admin = true
 		}
+		else if (isMod(this)) {
+			data.mod = true
+		}
 		if (this.trip) {
 			data.trip = this.trip
 		}
