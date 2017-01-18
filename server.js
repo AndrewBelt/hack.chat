@@ -312,6 +312,21 @@ var COMMANDS = {
 		broadcast({cmd: 'info', text: "Banned " + nick}, this.channel)
 	},
 
+	unban: function(args) {
+		if (!isMod(this)) {
+			return
+		}
+
+		var ip = String(args.ip)
+		if (!this.channel) {
+			return
+		}
+
+		POLICE.pardon(ip)
+		console.log(this.nick + " [" + this.trip + "] unbanned " + ip + " in " + this.channel)
+		send({cmd: 'info', text: "Unbanned " + ip}, this)
+	},
+
 	// Admin-only commands below this point
 
 	listUsers: function() {
@@ -400,6 +415,13 @@ var POLICE = {
 		var record = this.search(id)
 		if (record) {
 			record.arrested = true
+		}
+	},
+
+	pardon: function(id) {
+		var record = this.search(id)
+		if (record) {
+			record.arrested = false
 		}
 	},
 }
