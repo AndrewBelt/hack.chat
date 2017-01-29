@@ -147,7 +147,7 @@ function pushMessage(args) {
 	// Message container
 	var messageEl = document.createElement('div')
 	messageEl.classList.add('message')
-	
+
 	if (args.nick == myNick) {
 		messageEl.classList.add('me')
 	}
@@ -246,9 +246,6 @@ function parseLinks(g0) {
 	var a = document.createElement('a')
 	a.innerHTML = g0
 	var url = a.textContent
-	if (url[0] == '?') {
-		url = "/" + url
-	}
 	a.href = url
 	a.target = '_blank'
 	return a.outerHTML
