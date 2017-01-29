@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/AndrewBelt/hack.chat",
   "dependencies": {
-    "ws": "^0.7.2"
+    "ws": "^1.1.1"
   },
   "engines": {
     "node": ">=0.12.0"
