@@ -193,7 +193,7 @@ function pushMessage(args) {
 	textEl.classList.add('text')
 
 	textEl.textContent = args.text || ''
-	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
+	textEl.innerHTML = textEl.innerHTML.replace(/(\s|^)(\?|https?:\/\/|www\.)\S+/gi, parseLinks)
 
 	if ($('#parse-latex').checked) {
 		// Temporary hotfix for \rule spamming, see https://github.com/Khan/KaTeX/issues/109
