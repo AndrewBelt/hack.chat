@@ -23,7 +23,7 @@ var frontpage = [
 	"GitHub: https://github.com/AndrewBelt/hack.chat",
 	"Android apps: https://goo.gl/UkbKYy https://goo.gl/qasdSu",
 	"",
-	"Server and web client released under the GNU General Public License.",
+	"Server and web client released under the MIT open source license.",
 	"No message history is retained on the hack.chat server.",
 ].join("\n")
 
