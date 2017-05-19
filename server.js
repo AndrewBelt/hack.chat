@@ -25,7 +25,7 @@ fs.watchFile(configFilename, {persistent: false}, function() {
 })
 
 
-var server = new ws.Server({host: config.host, port: config.port})
+var server = new ws.Server({host: config.host, port: config.port, perMessageDeflate: false})
 console.log("Started server on " + config.host + ":" + config.port)
 
 server.on('connection', function(socket) {
@@ -42,7 +42,10 @@ server.on('connection', function(socket) {
 			// ignore ridiculously large packets
 			if (data.length > 65536) {
 				// Socket buffer likely not being flushed quickly enough or it's an attack,
-				// In either case, since we cannot flush the socket, we should kill it
+				// In either case, we should kill it
+				socket._receiver.flush();
+				socket._receiver.messageBuffer = [];
+				socket._receiver.cleanup();
 				socket.close()
 				return
 			}
@@ -55,7 +58,10 @@ server.on('connection', function(socket) {
 		}
 		catch (e) {
 			// Socket sent malformed JSON or buffer contains invalid JSON
-			// Since we cannot flush the socket, and for security reasons, we should kill it
+			// For security reasons, we should kill it
+			socket._receiver.flush();
+			socket._receiver.messageBuffer = [];
+			socket._receiver.cleanup();
 			socket.close()
 			console.warn(e.stack)
 		}
