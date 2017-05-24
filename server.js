@@ -25,10 +25,18 @@ fs.watchFile(configFilename, {persistent: false}, function() {
 })
 
 
-var server = new ws.Server({host: config.host, port: config.port, perMessageDeflate: false})
+var server = new ws.Server({ host: config.host, port: config.port })
 console.log("Started server on " + config.host + ":" + config.port)
 
 server.on('connection', function(socket) {
+	// Socket receiver has crashed, flush and kill socket
+	socket._receiver.onerror = function(e){
+		socket._receiver.flush();
+		socket._receiver.messageBuffer = [];
+		socket._receiver.cleanup();
+		socket.close();
+	}
+
 	socket.on('message', function(data) {
 		try {
 			// Don't penalize yet, but check whether IP is rate-limited
@@ -41,12 +49,6 @@ server.on('connection', function(socket) {
 
 			// ignore ridiculously large packets
 			if (data.length > 65536) {
-				// Socket buffer likely not being flushed quickly enough or it's an attack,
-				// In either case, we should kill it
-				socket._receiver.flush();
-				socket._receiver.messageBuffer = [];
-				socket._receiver.cleanup();
-				socket.close()
 				return
 			}
 			var args = JSON.parse(data)
