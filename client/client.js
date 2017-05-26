@@ -19,6 +19,7 @@ var frontpage = [
 	"Formatting:",
 	"Whitespace is preserved, so source code can be pasted verbatim.",
 	"Surround LaTeX with a dollar sign for inline style $\\zeta(2) = \\pi^2/6$, and two dollars for display. $$\\int_0^1 \\int_0^1 \\frac{1}{1-xy} dx dy = \\frac{\\pi^2}{6}$$",
+	"And you need to learn LaTeX by yourself and if you can't you are a faggot",
 	"",
 	"GitHub: https://github.com/AndrewBelt/hack.chat",
 	"Android apps: https://goo.gl/UkbKYy https://goo.gl/qasdSu",
