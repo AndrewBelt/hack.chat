@@ -45,7 +45,7 @@ function localStorageSet(key, val) {
 
 
 var ws
-var myNick = localStorageGet('my-nick')
+var myNick
 var myChannel = window.location.search.replace(/^\?/, '')
 var lastSent = [""]
 var lastSentPos = 0
@@ -70,6 +70,7 @@ function join(channel) {
 	var wasConnected = false
 
 	ws.onopen = function() {
+		myNick = = localStorageGet('my-nick')
 		if (!wasConnected) {
 			if (location.hash) {
 				myNick = location.hash.substr(1)
@@ -81,6 +82,7 @@ function join(channel) {
 		if (myNick) {
 			localStorageSet('my-nick', myNick)
 			send({cmd: 'join', channel: channel, nick: myNick})
+			myNick = myNick.split('#')[0];
 		}
 		wasConnected = true
 	}
