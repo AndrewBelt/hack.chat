@@ -28,7 +28,7 @@ fs.watchFile(configFilename, {persistent: false}, function() {
 var server = new ws.Server({ host: config.host, port: config.port })
 console.log("Started server on " + config.host + ":" + config.port)
 
-server.on('connection', function(socket) {
+server.on('connection', function connection(socket, req) {
 	// Socket receiver has crashed, flush and kill socket
 	socket._receiver.onerror = function(e){
 		socket._receiver.flush();
@@ -36,16 +36,16 @@ server.on('connection', function(socket) {
 		socket._receiver.cleanup();
 		socket.close();
 	}
-
+    socket.headers = req.headers;
 	socket.on('message', function(data) {
 		try {
 			// Don't penalize yet, but check whether IP is rate-limited
-			if (POLICE.frisk(getAddress(socket), 0)) {
+			if (POLICE.frisk(getAddress(req), 0)) {
 				send({cmd: 'warn', text: "Your IP is being rate-limited or blocked."}, socket)
 				return
 			}
 			// Penalize here, but don't do anything about it
-			POLICE.frisk(getAddress(socket), 1)
+			POLICE.frisk(getAddress(req), 1)
 
 			// ignore ridiculously large packets
 			if (data.length > 65536) {
@@ -61,7 +61,7 @@ server.on('connection', function(socket) {
 		catch (e) {
 			// Socket sent malformed JSON or buffer contains invalid JSON
 			// For security reasons, we should kill it
-			socket._receiver.flush();
+            // socket._receiver.flush();
 			socket._receiver.messageBuffer = [];
 			socket._receiver.cleanup();
 			socket.close()
@@ -111,16 +111,12 @@ function nicknameValid(nick) {
 }
 
 function getAddress(client) {
-	if (config.x_forwarded_for) {
 		// The remoteAddress is 127.0.0.1 since if all connections
 		// originate from a proxy (e.g. nginx).
 		// You must write the x-forwarded-for header to determine the
 		// client's real IP address.
-		return client.upgradeReq.headers['x-forwarded-for']
-	}
-	else {
-		return client.upgradeReq.connection.remoteAddress
-	}
+    return client.headers['x-forwarded-for']
+    //return client.upgradeReq.headers['x-forwarded-for']
 }
 
 function hash(password) {

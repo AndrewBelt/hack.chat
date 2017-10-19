@@ -1,0 +1,33 @@
+version: '2'
+
+services:
+    chat:
+        build: .
+        entrypoint: http-server /hack.chat/client
+        labels:
+          - "traefik.enabled=true"
+          - "traefik.backend=chat"
+          - "traefik.frontend.rule=Host:chat.ptrk.io"
+          - "traefik.port=8080"
+        environment:
+          - "CHATWS=chatws.ptrk.io"
+        networks:
+          - "reverseproxy_default"
+        restart: always
+    chat-server:
+        build: .
+        entrypoint: node /hack.chat/server.js
+        labels:
+          - "traefik.enabled=true"
+          - "traefik.backend=chatws"
+          - "traefik.frontend.rule=Host:chatws.ptrk.io"
+            #          - "traefik.protocol=wss"
+          - "traefik.frontend.passHostHeader=true"
+          - "traefik.port=6060"
+        networks:
+          - "reverseproxy_default"
+        restart: always
+networks:
+    reverseproxy_default:
+        external:
+            name: reverseproxy_default
