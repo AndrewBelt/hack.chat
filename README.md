@@ -5,4 +5,5 @@
 ## Install
 
 * Change CHATWS to your websocket address
+* Copy the config-sample.json to config.json with right variables
 * `docker-compose up -d`
