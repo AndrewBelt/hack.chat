@@ -9,6 +9,8 @@ services:
           - "traefik.backend=chat"
           - "traefik.frontend.rule=Host:chat.ptrk.io"
           - "traefik.port=8080"
+        environment:
+          - "CHATWS=chatws.ptrk.io"
         networks:
           - "reverseproxy_default"
         restart: always
@@ -24,8 +26,6 @@ services:
           - "traefik.port=6060"
         networks:
           - "reverseproxy_default"
-        environment:
-          - "CHATWS=chatws.ptrk.io"
         restart: always
 networks:
     reverseproxy_default:
