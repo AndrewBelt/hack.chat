@@ -28,13 +28,24 @@ fs.watchFile(configFilename, {persistent: false}, function() {
 var server = new ws.Server({ host: config.host, port: config.port })
 console.log("Started server on " + config.host + ":" + config.port)
 
-server.on('connection', function(socket) {
+server.on('connection', function(socket, request) {
+	// The ws request object is only accessable during the Connection event
+	// We will need to store the remote address at this point
+	if (config.x_forwarded_for) {
+		// The remoteAddress is 127.0.0.1 since if all connections
+		// originate from a proxy (e.g. nginx).
+		// You must write the x-forwarded-for header to determine the
+		// client's real IP address.
+		socket.remoteAddress = request.headers['x-forwarded-for']
+	}
+	else {
+		socket.remoteAddress = request.connection.remoteAddress
+	}
+
 	// Socket receiver has crashed, flush and kill socket
-	socket._receiver.onerror = function(e){
-		socket._receiver.flush();
-		socket._receiver.messageBuffer = [];
-		socket._receiver.cleanup();
-		socket.close();
+	socket._receiver.onerror = function (e) {
+		socket._receiver.cleanup()
+		socket.close()
 	}
 
 	socket.on('message', function(data) {
@@ -61,9 +72,7 @@ server.on('connection', function(socket) {
 		catch (e) {
 			// Socket sent malformed JSON or buffer contains invalid JSON
 			// For security reasons, we should kill it
-			socket._receiver.flush();
-			socket._receiver.messageBuffer = [];
-			socket._receiver.cleanup();
+			socket._receiver.cleanup()
 			socket.close()
 			console.warn(e.stack)
 		}
@@ -111,16 +120,7 @@ function nicknameValid(nick) {
 }
 
 function getAddress(client) {
-	if (config.x_forwarded_for) {
-		// The remoteAddress is 127.0.0.1 since if all connections
-		// originate from a proxy (e.g. nginx).
-		// You must write the x-forwarded-for header to determine the
-		// client's real IP address.
-		return client.upgradeReq.headers['x-forwarded-for']
-	}
-	else {
-		return client.upgradeReq.connection.remoteAddress
-	}
+	return client.remoteAddress
 }
 
 function hash(password) {
