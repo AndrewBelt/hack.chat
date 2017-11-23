@@ -2,7 +2,7 @@
 /* jshint esnext: true */
 
 var fs = require('fs')
-var ws = require('ws')
+var ws = require('uws')
 var crypto = require('crypto')
 
 
