@@ -21,7 +21,7 @@ var frontpage = [
 	"Surround LaTeX with a dollar sign for inline style $\\zeta(2) = \\pi^2/6$, and two dollars for display. $$\\int_0^1 \\int_0^1 \\frac{1}{1-xy} dx dy = \\frac{\\pi^2}{6}$$",
 	"",
 	"GitHub: https://github.com/AndrewBelt/hack.chat",
-	"Android apps: https://goo.gl/UkbKYy https://goo.gl/qasdSu",
+	"Android apps: https://goo.gl/UkbKYy https://goo.gl/qasdSu https://goo.gl/fGQFQN",
 	"",
 	"Server and web client released under the MIT open source license.",
 	"No message history is retained on the hack.chat server.",
