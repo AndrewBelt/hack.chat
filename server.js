@@ -275,7 +275,8 @@ var COMMANDS = {
 			return
 		}
 		if (friend == this) {
-			// Ignore silently
+			// Ignore not so silently that you just tried to friend yourself
+			send({cmd: 'warn', text: "Sorry you can't friend yourself... Might want to create another account and talk to them"}, this)
 			return
 		}
 		var channel = Math.random().toString(36).substr(2, 8)
