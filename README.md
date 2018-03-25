@@ -1,3 +1,5 @@
+# This repo is deprecated. Use https://github.com/hack-chat/main
+
 [![hack.chat screenshot](https://raw.githubusercontent.com/AndrewBelt/hack.chat/master/screenshot.png)](https://hack.chat/)
 
 ## Local install
