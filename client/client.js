@@ -49,6 +49,7 @@ var myNick = localStorageGet('my-nick')
 var myChannel = window.location.search.replace(/^\?/, '')
 var lastSent = [""]
 var lastSentPos = 0
+var banned = localStorageGet('banned') == 'true';
 
 
 // Ping server every 50 seconds to retain WebSocket connection
@@ -80,7 +81,9 @@ function join(channel) {
 		}
 		if (myNick) {
 			localStorageSet('my-nick', myNick)
-			send({cmd: 'join', channel: channel, nick: myNick})
+			if (!banned) {
+				send({cmd: 'join', channel: channel, nick: myNick})
+			}
 		}
 		wasConnected = true
 	}
@@ -140,6 +143,12 @@ var COMMANDS = {
 			pushMessage({nick: '*', text: nick + " left"})
 		}
 	},
+	data: function(args) {
+		if (args.banned) {
+			banned = true;
+			localStorageSet('banned', banned)
+		}
+	}
 }
 
 
@@ -193,7 +202,7 @@ function pushMessage(args) {
 	textEl.classList.add('text')
 
 	textEl.textContent = args.text || ''
-	textEl.innerHTML = textEl.innerHTML.replace(/(\?|https?:\/\/)\S+?(?=[,.!?:)]?\s|$)/g, parseLinks)
+	textEl.innerHTML = textEl.innerHTML.replace(/(\s|^)(\?|https?:\/\/|www\.)\S+/g, parseLinks)
 
 	if ($('#parse-latex').checked) {
 		// Temporary hotfix for \rule spamming, see https://github.com/Khan/KaTeX/issues/109

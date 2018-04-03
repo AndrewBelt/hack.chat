@@ -322,6 +322,7 @@ var COMMANDS = {
 		}
 
 		POLICE.arrest(getAddress(badClient))
+		send({cmd: 'data', banned: true}, badClient);
 		console.log(this.nick + " [" + this.trip + "] banned " + nick + " in " + this.channel)
 		broadcast({cmd: 'info', text: "Banned " + nick}, this.channel)
 	},
