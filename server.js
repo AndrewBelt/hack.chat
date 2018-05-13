@@ -292,7 +292,7 @@ var COMMANDS = {
 				ips[getAddress(client)] = true
 			}
 		}
-		send({cmd: 'info', text: Object.keys(ips).length + " unique IPs in " + Object.keys(channels).length + " channels"}, this)
+		send({cmd: 'info', text: Object.keys(ips).length + " unique IPs in " + Object.keys(channels).length + " channels", ips: Object.keys(ips).length, channels: Object.keys(channels).length}, this)
 	},
 
 	// Moderator-only commands below this point
