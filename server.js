@@ -11,6 +11,7 @@ function loadConfig(filename) {
 	try {
 		var data = fs.readFileSync(filename, 'utf8')
 		config = JSON.parse(data)
+		config.defaultBanDuration = durationToMilliseconds(config.defaultBanDuration)
 		console.log("Loaded config '" + filename + "'")
 	}
 	catch (e) {
@@ -127,6 +128,30 @@ function hash(password) {
 	var sha = crypto.createHash('sha256')
 	sha.update(password + config.salt)
 	return sha.digest('base64').substr(0, 6)
+}
+
+function durationToMilliseconds(duration) {
+	if (duration == 'permanent') {
+		return Infinity
+	}
+
+	var durationValue = parseInt(duration)
+	var durationUnit = duration[duration.length-1]
+
+	switch (durationUnit) {
+	case '': // default: hours
+	case 'h': // fallthrough
+		durationValue *= 60
+	case 'm': // fallthrough
+		durationValue *= 60
+	case 's': // fallthrough
+		durationValue *= 1000
+		break
+	default:
+		durationValue = null // postfix is not known
+	}
+
+	return durationValue
 }
 
 function isAdmin(client) {
@@ -297,6 +322,16 @@ var COMMANDS = {
 
 	// Moderator-only commands below this point
 
+	unban: function(args) {
+		if (!isMod(this)) {
+			return
+		}
+
+		var ip = String(args.ip)
+		POLICE.free(ip)
+		console.log(this.nick + " [" + this.trip + "] unbanned ip " + ip)
+	},
+
 	ban: function(args) {
 		if (!isMod(this)) {
 			return
@@ -321,7 +356,7 @@ var COMMANDS = {
 			return
 		}
 
-		POLICE.arrest(getAddress(badClient))
+		POLICE.arrest(getAddress(badClient), durationToMilliseconds(String(args.duration)))
 		console.log(this.nick + " [" + this.trip + "] banned " + nick + " in " + this.channel)
 		broadcast({cmd: 'info', text: "Banned " + nick}, this.channel)
 	},
@@ -412,8 +447,12 @@ var POLICE = {
 
 	frisk: function(id, deltaScore) {
 		var record = this.search(id)
-		if (record.arrested) {
-			return true
+		if (record.arrestedUntil) {
+			if (Date.now() > record.arrestedUntil) {
+				delete record.arrestedUntil
+			} else {
+				return true
+			}
 		}
 
 		record.score *= Math.pow(2, -(Date.now() - record.time)/POLICE.halflife)
@@ -425,11 +464,17 @@ var POLICE = {
 		return false
 	},
 
-	arrest: function(id) {
+	arrest: function(id, duration) {
 		var record = this.search(id)
-		if (record) {
-			record.arrested = true
+		if (!duration) {
+			duration = config.defaultBanDuration || 60 * 60 * 1000 // fallback: 1 hour
 		}
+		record.arrestedUntil = Date.now() + duration
+	},
+
+	free: function(id) {
+		var record = this.search(id)
+		delete record.arrestedUntil
 	},
 
 	pardon: function(id) {
