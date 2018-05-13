@@ -146,8 +146,9 @@ function isMod(client) {
 
 // `this` bound to client
 var COMMANDS = {
-	ping: function() {
-		// Don't do anything
+	ping: function(args) {
+		var randomData = args.randomdata
+		send({cmd: 'pong', randomdata: randomData}, this)
 	},
 
 	join: function(args) {
